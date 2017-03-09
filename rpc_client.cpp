@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <tclDecls.h>
 #include "rpc.h"
 #include "message_lib.h"
 #include "type_lib.h"
@@ -14,6 +15,8 @@
 using namespace std;
 
 static int binderSocket = -1;
+
+// LENGTH, TYPE, MESSAGE
 
 int createSocket(char * addr, int port) {
     int socket;
@@ -55,15 +58,12 @@ int sendLocationRequestMessage(char * name, int argTypes[]) {
         }
     }
 
-    return sendMessage(binderSocket, LOC_REQUEST, buffer, NULL);
-
-
+    return sendLocRequestAfterFormatting(binderSocket, name, argTypes);
 }
 
-int sendExecuteRequestMessage(int serverSocket) {
-    // connect to server
+int sendExecuteRequestMessage(int serverSocket, char* name, int* argTypes, void** args) {
 
-    int result = sendMessage(serverSocket, EXECUTE, msgSize, msg);
+    int result = sendExecRequestAfterFormatting(serverSocket, name, argTypes, args);
 
     if (result < 0) {
         return result;
@@ -93,7 +93,7 @@ int sendTerminationMessage() {
         }
     }
 
-    return sendMessage(binderSocket, TERMINATE, 0, NULL);
+    return sendTerminateAfterFormatting(binderSocket);
 }
 
 
@@ -107,6 +107,8 @@ int rpcCall(char* name, int* argTypes, void** args) {
         return locationRequestResult;
     }
 
+    // TODO: handle response from the binder
+
     //then send execute-req msg to the server
     int serverSocket = createSocket(addr, port);
 
@@ -114,7 +116,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
         return SERVER_SOCKET_NOT_SETUP;
     }
 
-    int responseFromServer = sendExecuteRequestMessage(serverSocket);
+    int responseFromServer = sendExecuteRequestMessage(serverSocket, name, argTypes, args);
 
     close(serverSocket);
 
