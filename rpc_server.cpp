@@ -1,7 +1,3 @@
-//
-// Created by J on 2017. 3. 7..
-//
-
 #include "rpc.h"
 #include "type_lib.h"
 #include <sys/socket.h>
@@ -32,7 +28,7 @@ int rpcInit() {
     sockfd_client = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd_client < 0) {
         cerr << "ERROR opening socket" << endl;
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     address.sin_family = AF_INET;
@@ -42,7 +38,7 @@ int rpcInit() {
     if ( bind(sockfd_client, (struct sockaddr *) &address, addrlen) < 0) {
         cerr << "ERROR on binding" << endl;
         close(sockfd_client);
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     getsockname(sockfd_client, (struct sockaddr *) &address, &addrlen);
@@ -57,7 +53,7 @@ int rpcInit() {
 
     if ( listen(sockfd_client, 5) < 0 ) {
         cerr << "ERROR on listen" << endl;
-        exit(EXIT_FAILURE);
+        return -1;
     }
     cout << "socket for clients done" << endl;
 
@@ -65,25 +61,25 @@ int rpcInit() {
     char *BINDER_PORT = getenv("BINDER_PORT");
     if (BINDER_PORT == NULL) {
         cerr << "ERROR, BINDER_PORT does not exist" << endl;
-        exit(EXIT_FAILURE);
+        return -1;
     }
     binder_port = atoi(BINDER_PORT);
     
     char *BINDER_ADDRESS = getenv("BINDER_ADDRESS");
     if (BINDER_ADDRESS == NULL) {
         cerr << "ERROR, BINDER_ADDRESS does not exist" << endl;
-        exit(EXIT_FAILURE);
+        return -1;
     }
     binder = gethostbyname( BINDER_ADDRESS );
     if (binder == NULL) {
         cerr << "ERROR, no such host" << endl;
-        exit(EXIT_FAILURE);
+        return -1;
     }
     
     sockfd_binder = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd_binder < 0) {
         cerr << "ERROR opening socket" << endl;
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     bzero((char *) &binder_addr, sizeof(binder_addr));
@@ -94,12 +90,9 @@ int rpcInit() {
 
     if (connect(sockfd_binder,(struct sockaddr *) &binder_addr,sizeof(binder_addr)) < 0) {
         cerr << "ERROR connecting" << endl;
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     cout << "open connection to binder done" << endl;
-}
-
-int main() {
-	rpcInit();
+    return 0;
 }

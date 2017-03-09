@@ -1,0 +1,13 @@
+make
+
+g++ -L. client.o -lrpc -o client
+g++ -L. server functions.o server function skels.o server.o -lrpc -o server
+
+./binder
+
+BINDER_ADDRESS=ubuntu1404-012
+BINDER_PORT=46533
+export BINDER_ADDRESS BINDER_PORT
+
+./server
+./client
