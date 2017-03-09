@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
+#include <netdb.h> 
 #include <stdio.h>
 #include <string>
 #include <iostream>
@@ -23,7 +24,7 @@ int sockfd_client, sockfd_binder, binder_socket, client_socket;
 int rpcInit() {
 	int port, binder_port;
 	struct sockaddr_in binder_addr, address;
-	struct hostnet *binder;
+	struct hostent *binder;
 
 	// connection socket for clients
     socklen_t addrlen = sizeof(address);
@@ -66,7 +67,7 @@ int rpcInit() {
         cerr << "ERROR, BINDER_PORT does not exist" << endl;
         exit(EXIT_FAILURE);
     }
-    portno = atoi(BINDER_PORT);
+    binder_port = atoi(BINDER_PORT);
     
     char *BINDER_ADDRESS = getenv("BINDER_ADDRESS");
     if (BINDER_ADDRESS == NULL) {
@@ -89,7 +90,7 @@ int rpcInit() {
     binder_addr.sin_family = AF_INET;
 
     bcopy((char *)binder->h_addr, (char *)&binder_addr.sin_addr.s_addr, binder->h_length);
-    binder_addr.sin_port = htons(portno);
+    binder_addr.sin_port = htons(binder_port);
 
     if (connect(sockfd_binder,(struct sockaddr *) &binder_addr,sizeof(binder_addr)) < 0) {
         cerr << "ERROR connecting" << endl;

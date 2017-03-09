@@ -10,11 +10,12 @@
 #include <iostream>
 #include <cstdlib>
 #include <cctype>
+#include <vector>
 using namespace std;
 
 int main() {
-    int sockfd, newsockfd, data_n, fd;
-    vector<int> socket_connected;
+    int sockfd, newsockfd, data_n, fd, maxfd, socket_n;
+    vector<int*> socket_connected;
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
     fd_set readfds;
@@ -58,7 +59,7 @@ int main() {
         socket_n = socket_connected.size();
 
         for (int i = 0 ; i < socket_n ; ++i) {
-            fd = *socket_connected[i];
+            fd = *(socket_connected[i]);
             if(fd > 0) FD_SET(fd , &readfds);
             if(fd > maxfd) maxfd = fd;
         }
@@ -79,19 +80,19 @@ int main() {
 	        FD_SET(*fdp, &readfds);
 	        if (*fdp > maxfd) maxfd = *fdp;
 	        socket_connected.push_back(fdp);
-            break;
+            goto begin;
         }
 
         cout << "Request" << endl;
         for (int i = 0; i < socket_n; i++) {
-            fd = *socket_connected[i];
+            fd = *(socket_connected[i]);
             if (FD_ISSET(fd, &readfds)) {
                 char buffer[4];
                 int valread = read(fd , buffer, 4);
                 
                 if (valread == 0) { // disconnected
                     close( fd );
-                    socket_connected.erase(i);
+                    socket_connected.erase(socket_connected.begin() + i);
                 } else if (valread < 0) {
                     cerr << "ERROR reading from socket" << endl;
                     goto begin;
@@ -121,13 +122,11 @@ int main() {
                     delete [] message;
                     */
 
-                    char *message = new char("request received");
+                    char message[17] = "request received";
                     if ( write(fd, message, 16) < 0) {
                         cerr << "ERROR sending to socket" << endl;
                         goto begin;
                     }
-
-                    delete [] message;
                 }
             }
         }
