@@ -1,5 +1,6 @@
 #include "rpc.h"
 #include "type_lib.h"
+#include "message_lib.h"
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/time.h> // FD_SET, FD_ISSET, FD_ZERO macros
@@ -16,7 +17,8 @@
 #include <vector>
 using namespace std;
 
-int sockfd_client, sockfd_binder;
+int sockfd_client, sockfd_binder, port;
+char SERVER_ADDRESS[1024];
 
 struct SkeletonData {
 	char name[64];
@@ -34,7 +36,7 @@ struct SkeletonData {
 vector<SkeletonData*> localDatabase;
 
 int rpcInit() {
-	int port, binder_port;
+	int binder_port;
 	struct sockaddr_in binder_addr, address;
 	struct hostent *binder;
 
@@ -61,7 +63,6 @@ int rpcInit() {
     port = ntohs(address.sin_port);
     string SERVER_PORT = to_string(port);
 
-    char SERVER_ADDRESS[1024];
     gethostname(SERVER_ADDRESS, 1024);
     
     printf("SERVER_ADDRESS %s\n", SERVER_ADDRESS);
@@ -71,7 +72,6 @@ int rpcInit() {
         cerr << "ERROR on listen" << endl;
         return -1;
     }
-    cout << "socket for clients done" << endl;
 
     // open connection to binder
     char *BINDER_PORT = getenv("BINDER_PORT");
@@ -109,7 +109,6 @@ int rpcInit() {
         return -1;
     }
 
-    cout << "open connection to binder done" << endl;
     return 0;
 }
 
@@ -118,10 +117,17 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 	// informing binder that a server procedure with the indicated name and
 	// list of argument type is avaliable at the server.
 	// ...(send protocol to binder)...
+	int result = sendRegRequestAfterFormatting(sockfd_binder, SERVER_ADDRESS, port, name, argTypes);
+	if (result < 0) {
+		cout << "negative result" << endl;
+		return result;
+	}
 
 	// makes an entry in a local database, associating the server skeleton with
 	// name and list of argument types.
 	localDatabase.push_back(new SkeletonData(name, argTypes, f));
-
-	return 0;
+	char c;
+	cin >> c;
+	
+	return result;
 }

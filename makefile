@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++11   # compiler flags
 OBJECTS1 = binder.o     # object files forming executable
 EXEC1 = binder			# given executable name
 
-OBJECTS2 = rpc_server.o
+OBJECTS2 = rpc_server.o message_lib.o
 EXEC2 = librpc.a
 
 OBJECTS = ${OBJECTS1} ${OBJECTS2}
@@ -25,6 +25,8 @@ ${EXEC2} : ${OBJECTS2}
 	ar -cvq $@ ${OBJECTS2}
 
 #############################################################
+
+${OBJECTS} : ${MAKEFILE_NAME}
 
 -include ${DEPENDS}			# include *.d files containing program dependences
 
