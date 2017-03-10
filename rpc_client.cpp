@@ -47,7 +47,7 @@ int sendLocationRequestMessage(char * name, int argTypes[]) {
             return BINDER_ADDR_NOT_FOUND;
         }
         char * binderPortString = getenv("BINDER_PORT");
-        if(binderPortString == NULL) {
+        if (binderPortString == NULL) {
             return BINDER_PORT_NOT_FOUND;
         }
 
@@ -104,6 +104,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
     int locationRequestResult = sendLocationRequestMessage(name, argTypes);
 
     if (locationRequestResult < 0) {
+        // Error
         return locationRequestResult;
     }
 

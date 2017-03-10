@@ -7,13 +7,6 @@
 #include <iostream>
 #include <sys/socket.h>
 
-//int sendDataAfterFormatting(int socket, unsigned int messageSize, MessageType msgType, char *message) {
-//
-//
-//
-//    return sentData;
-//}
-
 int getMessageSize(const char * name, int * argTypes, void** args) {
     int nameLength = 64;
     int argTypesLength = sizeof(argTypes)/sizeof(*argTypes);
@@ -38,17 +31,40 @@ int getMessageSize(char * server_identifer, int port, const char* name, int* arg
     return server_identifier_Length + portLength + nameLength + argTypesLength;
 }
 
-void getMessage(char * message, const char* name, int* argTypes, void**args) {
-    string name_string(name);
+void getMessage(unsigned int messageLength, MessageType msgType, char * message, const char* name, int* argTypes, void**args) {
+    message[0] = (messageLength >> 24) & 0xFF;
+    message[1] = (messageLength >> 16) & 0xFF;
+    message[2] = (messageLength >> 8) & 0xFF;
+    message[3] = messageLength & 0xFF;
 
-    memcpy(&message[0], name_string.data(), name_string.size());
+    int msgType_int = static_cast<int>(msgType);
+    message[4] = (msgType_int >> 24) & 0xFF;
+    message[5] = (msgType_int >> 16) & 0xFF;
+    message[6] = (msgType_int >> 8) & 0xFF;
+    message[7] = msgType_int & 0xFF;
+
+    memcpy(message + 8, name, 64);
+
+    int argTypesSize = sizeof(argTypes);
+    memcpy(message + 72, argTypes, argTypesSize);
+
+    memcpy(message + argTypesSize, args, argTypesSize - 1);
 }
-void getMessage(char * message, const char* name, int* argTypes) {
-    string name_string(name);
+void getMessage(unsigned int messageLength, MessageType msgType, char * message, const char* name, int* argTypes) {
+    message[0] = (messageLength >> 24) & 0xFF;
+    message[1] = (messageLength >> 16) & 0xFF;
+    message[2] = (messageLength >> 8) & 0xFF;
+    message[3] = messageLength & 0xFF;
 
-    memcpy(&message[0], name_string.data(), name_string.size());
-    memcpy(&message[], name_string.data(), name_string.size());
+    int msgType_int = static_cast<int>(msgType);
+    message[4] = (msgType_int >> 24) & 0xFF;
+    message[5] = (msgType_int >> 16) & 0xFF;
+    message[6] = (msgType_int >> 8) & 0xFF;
+    message[7] = msgType_int & 0xFF;
 
+    memcpy(message + 8, name, 64);
+
+    memcpy(message + 72, argTypes, sizeof(argTypes));
 }
 void getMessage(unsigned int messageLength, MessageType msgType, char * message, char * server_identifier, int port, const char* name, int* argTypes) {
     message[0] = (messageLength >> 24) & 0xFF;
@@ -74,13 +90,20 @@ void getMessage(unsigned int messageLength, MessageType msgType, char * message,
     memcpy(message + 1100, argTypes, sizeof(argTypes));
 }
 
+void getMessage(MessageType msgType, char * message) {
+    int msgType_int = static_cast<int>(msgType);
+
+    message[0] = (msgType_int >> 24) & 0xFF;
+    message[1] = (msgType_int >> 16) & 0xFF;
+    message[2] = (msgType_int >> 8) & 0xFF;
+    message[3] = msgType_int & 0xFF;
+}
+
 int sendRegRequestAfterFormatting(int socket, char * server_identifier, int port, char * name, int * argTypes) {
     int msgSize = getMessageSize(server_identifier, port, name, argTypes);
     msgSize += 8;
     char msg[msgSize];
     getMessage(msgSize, REGISTER, msg, server_identifier, port, name, argTypes);
-
-//    sendDataAfterFormatting(socket, msgSize, REGISTER, msg);
 
     int sentData = send(socket, msg, msgSize, 0);
 
@@ -93,20 +116,44 @@ int sendRegRequestAfterFormatting(int socket, char * server_identifier, int port
 
 int sendLocRequestAfterFormatting(int socket, char * name, int argTypes[]) {
     int msgSize = getMessageSize(name, argTypes);
+    msgSize += 8;
     char msg[msgSize];
-    getMessage(msg, name, argTypes);
+    getMessage(msgSize, LOC_REQUEST, msg, name, argTypes);
 
-    sendDataAfterFormatting(socket, msg);
+    int sentData = send(socket, msg, msgSize, 0);
+
+    if (sentData == -1) {
+        return DATA_SEND_FAILED;
+    }
+
+    return sentData;
 }
 
 int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void** args) {
     int msgSize = getMessageSize(name, argTypes, args);
-    char msg[msgSize + 4];
+    msgSize += 8;
+    char msg[msgSize];
     getMessage(msgSize, EXECUTE, msg, name, argTypes, args);
 
-    sendDataAfterFormatting(socket, msgSize, EXECUTE, msg);
+    int sentData = send(socket, msg, msgSize, 0);
+
+    if (sentData == -1) {
+        return DATA_SEND_FAILED;
+    }
+
+    return sentData;
 }
 
 int sendTerminateAfterFormatting(int socket) {
-    sendDataAfterFormatting(socket, TERMINATE);
+    int msgSize = 4;
+    char msg[msgSize];
+    getMessage(TERMINATE, msg);
+
+    int sentData = send(socket, msg, msgSize, 0);
+
+    if (sentData == -1) {
+        return DATA_SEND_FAILED;
+    }
+
+    return sentData;
 }

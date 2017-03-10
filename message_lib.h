@@ -27,16 +27,14 @@ int getMessageSize(char * server_identifer, int port, const char* name, int* arg
 //int getMessageSize(char * serverId, int port); // loc success
 //int getMessageSize(int reasonCode); // loc fail, exe fail, reg success&fail
 
-void getMessage(char * message, const char* name, int* argTypes, void**args);
-void getMessage(char * message, const char* name, int* argTypes);
-void getMessage(char * message, char * server_identifier, int port, const char* name, int* argTypes);
+void getMessage(unsigned int messageLength, MessageType msgType, char * message, const char* name, int* argTypes, void**args);
+void getMessage(unsigned int messageLength, MessageType msgType, char * message, const char* name, int* argTypes);
+void getMessage(unsigned int messageLength, MessageType msgType, char * message, char * server_identifier, int port, const char* name, int* argTypes);
 
 int sendRegRequestAfterFormatting(int socket, char * server_identifier, int port, char * name, int * argTypes);
 int sendLocRequestAfterFormatting(int socket, char * name, int* argTypes);
 int sendExecRequestAfterFormatting(int serverSocket, char* name, int* argTypes, void** args);
 int sendTerminateAfterFormatting(int socket);
-
-int sendDataAfterFormatting(int socket, unsigned int messageSize = 0, MessageType msgType, char *message = NULL);
 
 int receiveMessage(int socket);
 
