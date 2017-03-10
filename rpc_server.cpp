@@ -13,9 +13,25 @@
 #include <iostream>
 #include <cstdlib>
 #include <cctype>
+#include <vector>
 using namespace std;
 
-int sockfd_client, sockfd_binder, binder_socket, client_socket;
+int sockfd_client, sockfd_binder;
+
+struct SkeletonData {
+	char name[64];
+	int *argTypes;
+	skeleton f;
+
+	SkeletonData(char *n, int *argTypes, skeleton f) : argTypes(argTypes), f(f) {
+		for (int i = 0; i < 64; ++i) {
+			if (n[i] == '\0') break;
+			name[i] = n[i];
+		}
+	}
+};
+
+vector<SkeletonData*> localDatabase;
 
 int rpcInit() {
 	int port, binder_port;
@@ -95,4 +111,17 @@ int rpcInit() {
 
     cout << "open connection to binder done" << endl;
     return 0;
+}
+
+
+int rpcRegister(char* name, int* argTypes, skeleton f) {
+	// informing binder that a server procedure with the indicated name and
+	// list of argument type is avaliable at the server.
+	// ...(send protocol to binder)...
+
+	// makes an entry in a local database, associating the server skeleton with
+	// name and list of argument types.
+	localDatabase.push_back(new SkeletonData(name, argTypes, f));
+
+	return 0;
 }
