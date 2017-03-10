@@ -23,14 +23,16 @@ enum MessageType {
 
 int getMessageSize(const char* name, int* argTypes, void**args); // execute, exe success
 int getMessageSize(const char* name, int* argTypes); // loc request
-//int getMessageSize(char * serverId, int port, const char* name, int* argTypes); // register
+int getMessageSize(char * server_identifer, int port, const char* name, int* argTypes); // register
 //int getMessageSize(char * serverId, int port); // loc success
 //int getMessageSize(int reasonCode); // loc fail, exe fail, reg success&fail
 
-int getMessage(char * message, const char* name, int* argTypes, void**args);
-int getMessage(char * message, const char* name, int* argTypes);
+void getMessage(char * message, const char* name, int* argTypes, void**args);
+void getMessage(char * message, const char* name, int* argTypes);
+void getMessage(char * message, char * server_identifier, int port, const char* name, int* argTypes);
 
-int sendLocRequestAfterFormatting(int socket, char * name, int argTypes[]);
+int sendRegRequestAfterFormatting(int socket, char * server_identifier, int port, char * name, int * argTypes);
+int sendLocRequestAfterFormatting(int socket, char * name, int* argTypes);
 int sendExecRequestAfterFormatting(int serverSocket, char* name, int* argTypes, void** args);
 int sendTerminateAfterFormatting(int socket);
 
