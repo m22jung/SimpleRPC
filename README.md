@@ -5,8 +5,8 @@ Implement a crude version of Remote Procedure Call.
 
 ## Project Participants
 
-Ji Ho Park (20518866): jh49park@uwaterloo.ca
-Myungsun Jung (20511678): m22jung@uwaterloo.ca
+- Ji Ho Park (20518866): jh49park@uwaterloo.ca
+- Myungsun Jung (20511678): m22jung@uwaterloo.ca
 
 ## How to Compile
 
