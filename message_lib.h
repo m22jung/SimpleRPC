@@ -41,10 +41,16 @@ int sendLocSuccessAfterFormatting(int socket, char * server_identifier, int port
 int sendLocFailureAfterFormatting(int socket, int reasonCode);
 int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void** args);
 int sendExecSuccessAfterFormatting(int socket, char * name, int * argTypes, void** args);
-int ssendExecFailureAfterFormatting(int socket, int reasonCode);
+int sendExecFailureAfterFormatting(int socket, int reasonCode);
 int sendTerminateAfterFormatting(int socket);
 
-int receiveMessage(int socket);
+int receiveRegRequest(int msgLength, char * message, char * server_identifier, int port, char * name, int * argTypes);
+int receiveRegResult();
+int receiveLocRequest();
+int receiveLocResult();
+int receiveExecRequest();
+int receiveExecResult();
+int receiveTerminalRequest();
 
 
 #endif //A03_MESSAGE_LIB_H

@@ -237,7 +237,7 @@ int sendExecSuccessAfterFormatting(int socket, char *name, int *argTypes, void *
     return sentData;
 }
 
-int ssendExecFailureAfterFormatting(int socket, int reasonCode) {
+int sendExecFailureAfterFormatting(int socket, int reasonCode) {
     int msgSize = getMessageSize(reasonCode);
     msgSize += 8;
     char msg[msgSize];
@@ -265,4 +265,29 @@ int sendTerminateAfterFormatting(int socket) {
     }
 
     return sentData;
+}
+
+int receiveRegRequest(int msgLength, char *message, char server_identifier[], int &port, char name[], int argTypes[]) {
+//    if (msgLength != sizeof(message)) {
+//        // error
+//        return error;
+//    }
+
+    // extract server_identifier
+    memset(server_identifier, 0, 1024);
+
+    // extract port
+    port = (int)((unsigned char)(message[1024]) << 24 |
+                    (unsigned char)(message[1025]) << 16 |
+                    (unsigned char)(message[1026]) << 8 |
+                    (unsigned char)(message[1027]) );
+
+    // extract name
+    memset(name, 1028, 64);
+
+    int argTypesLength = msgLength - 1024 - 4 - 64;
+    // extract argTypes
+    memset(argTypes, 1092, argTypesLength);
+
+    return 0;
 }

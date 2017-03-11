@@ -139,6 +139,22 @@ int main() {
                     switch (type) {
                     	case REGISTER:
                     		cout << "REGISTER" << endl;
+                            char server_identifier[1024];
+                            int port;
+                            char name[64];
+                            int* argTypes;
+                            int receiveResult = receiveRegRequest(len, message, server_identifier, port, name, argTypes);
+                            cout << "Server_ideitifier: " << (void *)server_identifier << endl;
+                            cout << "port: " << port << endl;
+                            cout << "name: " << (void *)name << endl;
+                            int i = 0;
+                            while(argTypes[i]) {
+                                cout << "arg type " << i << " is " << argTypes[i] << endl;
+                            }
+                            if (receiveResult < 0) {
+                                // error
+                                return receiveResult;
+                            }
                     		break;
                     	case LOC_REQUEST:
                     		cout << "LOC_REQUEST" << endl;
