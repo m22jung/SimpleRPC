@@ -44,13 +44,13 @@ int sendExecSuccessAfterFormatting(int socket, char * name, int * argTypes, void
 int sendExecFailureAfterFormatting(int socket, int reasonCode);
 int sendTerminateAfterFormatting(int socket);
 
-int receiveRegRequest(int msgLength, char * message, char * server_identifier, int &port, char * name, int * argTypes);
-int receiveRegResult();
-int receiveLocRequest();
-int receiveLocResult();
-int receiveExecRequest();
-int receiveExecResult();
-int receiveTerminalRequest();
+int receiveLengthAndType(int socket, int &length, int &msgType);
+void receiveServerIdentifierAndPortAndNameAndArgType(int msgLength, char * message, char * server_identifier, int &port, char * name, int * argTypes);
+void receiveNameAndArgType(int msgLength, char * message, char * name, int * argTypes);
+void receiveServerIdentifierAndPort(int msgLength, char * message, char * server_identifier, int &port);
+void receiveReasonCode(int msgLength, char * message, int &reasonCode);
+void receiveNameAndArgTypeAndArgs(int msgLength, char * message, char * name, int * argTypes, void** args);
+
 
 
 #endif //A03_MESSAGE_LIB_H

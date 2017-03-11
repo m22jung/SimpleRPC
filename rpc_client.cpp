@@ -7,7 +7,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <tclDecls.h>
 #include "rpc.h"
 #include "message_lib.h"
 #include "type_lib.h"
@@ -63,13 +62,7 @@ int sendLocationRequestMessage(char * name, int argTypes[]) {
 
 int sendExecuteRequestMessage(int serverSocket, char* name, int* argTypes, void** args) {
 
-    int result = sendExecRequestAfterFormatting(serverSocket, name, argTypes, args);
-
-    if (result < 0) {
-        return result;
-    } else {
-        // handle response
-    }
+    return sendExecRequestAfterFormatting(serverSocket, name, argTypes, args);
 
 }
 
@@ -108,16 +101,60 @@ int rpcCall(char* name, int* argTypes, void** args) {
         return locationRequestResult;
     }
 
-    // TODO: handle response from the binder
+    int length, msgType;
+    // Extract length and type
+    int extractLengthAndTypeResult = receiveLengthAndType(binderSocket, length, msgType);
+
+    if (extractLengthAndTypeResult < 0) {
+        // error
+        return extractLengthAndTypeResult;
+    }
+
+    // Depending on the type, handle differently
+
+    char *message = new char[length];
+    if (read(binderSocket, message + 8, length - 8) < 0) {
+        return READING_SOCKET_ERROR;
+    }
+
+    char *server_identifier = new char[1024];
+    int port;
+    switch(msgType) {
+        case LOC_SUCCESS:
+            receiveServerIdentifierAndPort(length, message, server_identifier, port);
+            // extract server_identifer, port
+            break;
+        case LOC_FAILURE:
+            int reasonCode = 0;
+            receiveReasonCode(length, message, reasonCode);
+            return reasonCode;
+            // extract reason code,return it
+            break;
+    }
+    delete [] message;
 
     //then send execute-req msg to the server
-    int serverSocket = createSocket(addr, port);
+    int serverSocket = createSocket(server_identifier, port);
 
     if (serverSocket < 0) {
         return SERVER_SOCKET_NOT_SETUP;
     }
 
     int responseFromServer = sendExecuteRequestMessage(serverSocket, name, argTypes, args);
+
+    //TODO: Handle response from the server
+    extractLengthAndTypeResult = receiveLengthAndType(binderSocket, length, msgType);
+
+    if (extractLengthAndTypeResult < 0) {
+        // error
+        return extractLengthAndTypeResult;
+    }
+
+    message = new char[length];
+    if (read(binderSocket, message + 8, length - 8) < 0) {
+        return READING_SOCKET_ERROR;
+    }
+    receiveNameAndArgTypeAndArgs(length, message, name, argTypes, args); // potential bug source
 
     close(serverSocket);
 
@@ -127,6 +164,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
 
 int rpcTerminate() {
     int terminationRequestResult = sendTerminationMessage();
+    close(binderSocket);
 
     return terminationRequestResult;
 }

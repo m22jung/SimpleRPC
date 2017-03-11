@@ -6,6 +6,10 @@
 #include "type_lib.h"
 #include <iostream>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/time.h> // FD_SET, FD_ISSET, FD_ZERO macros
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include "string.h"
 
 int getMessageSize(const char * name, int * argTypes, void** args) {
@@ -273,20 +277,41 @@ int sendTerminateAfterFormatting(int socket) {
     return sentData;
 }
 
-int receiveRegRequest(int msgLength, char *message, char *server_identifier, int &port, char *name, int *argTypes) {
-//    if (msgLength != sizeof(message)) {
-//        // error
-//        return error;
-//    }
+int receiveLengthAndType(int socket, int &length, int &msgType) {
+    char buffer[8];
+    int valread = read(socket, buffer, 8);
+
+    if (valread == 0) { // disconnected
+        return SOCKET_NOT_SETUP;
+    } else if (valread < 0) {
+        cerr << "ERROR reading from socket" << endl;
+        return READING_SOCKET_ERROR;
+
+    } else { // read
+        length = (int)((unsigned char)(buffer[0]) << 24 |
+                        (unsigned char)(buffer[1]) << 16 |
+                        (unsigned char)(buffer[2]) << 8 |
+                        (unsigned char)(buffer[3]) );
+
+        msgType = (int)((unsigned char)(buffer[4]) << 24 |
+                         (unsigned char)(buffer[5]) << 16 |
+                         (unsigned char)(buffer[6]) << 8 |
+                         (unsigned char)(buffer[7]) );
+    }
+    return 0;
+}
+
+void receiveServerIdentifierAndPortAndNameAndArgType(int msgLength, char *message, char *server_identifier, int &port,
+                                                    char *name, int *argTypes) {
 
     // extract server_identifier
     memcpy(server_identifier, message + 8, 1024);
 
     // extract port
     port = (int)((unsigned char)(message[1032]) << 24 |
-                    (unsigned char)(message[1033]) << 16 |
-                    (unsigned char)(message[1034]) << 8 |
-                    (unsigned char)(message[1035]) );
+                 (unsigned char)(message[1033]) << 16 |
+                 (unsigned char)(message[1034]) << 8 |
+                 (unsigned char)(message[1035]) );
 
     // extract name
     memcpy(name, message + 1036, 64);
@@ -295,5 +320,37 @@ int receiveRegRequest(int msgLength, char *message, char *server_identifier, int
     // extract argTypes
     memcpy(argTypes, message + 1100, argTypesLength);
 
-    return 0;
+}
+
+void receiveNameAndArgType(int msgLength, char *message, char *name, int *argTypes) {
+
+    // extract name
+    memcpy(name, message + 8, 64);
+
+    // extract server_identifier
+    int argTypesLength = msgLength - 8 - 64;
+    memcpy(argTypes, message + 72, argTypesLength);
+
+}
+
+void receiveServerIdentifierAndPort(int msgLength, char *message, char *server_identifier, int &port) {
+
+    //extract server_identifier
+    memcpy(server_identifier, message + 8, 1024);
+
+    //extract port
+    port = (int)((unsigned char)(message[1032]) << 24 |
+                 (unsigned char)(message[1033]) << 16 |
+                 (unsigned char)(message[1034]) << 8 |
+                 (unsigned char)(message[1035]) );
+
+}
+
+void receiveReasonCode(int msgLength, char *message, int &reasonCode) {
+    //extract reasonCode
+    reasonCode = (int)((unsigned char)(message[8]) << 24 |
+                       (unsigned char)(message[9]) << 16 |
+                       (unsigned char)(message[10]) << 8 |
+                       (unsigned char)(message[11]) );
+
 }
