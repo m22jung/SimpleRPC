@@ -66,10 +66,12 @@ void getMessage(int messageLength, MessageType msgType, char * message, const ch
 
     memcpy(message + 8, name, 64);
 
-    int argTypesSize = sizeof(argTypes);
+    int argTypesLength = 0;
+    while (argTypes[argTypesLength++]);
+    int argTypesSize = argTypesLength * 4;
     memcpy(message + 72, argTypes, argTypesSize);
 
-    memcpy(message + argTypesSize, args, argTypesSize - 1);
+    memcpy(message + argTypesSize, args, argTypesSize - 4);
 }
 void getMessage(unsigned int messageLength, MessageType msgType, char * message, const char* name, int* argTypes) {
     putMsglengthAndMsgType(messageLength, msgType, message);
@@ -90,7 +92,11 @@ void getMessage(int messageLength, MessageType msgType, char * message, char * s
 
     memcpy(message + 1036, name, 64);
 
-    memcpy(message + 1100, argTypes, sizeof(argTypes));
+
+    int argTypesLength = 0;
+    while (argTypes[argTypesLength++]);
+    int argTypesSize = argTypesLength * 4;
+    memcpy(message + 1100, argTypes, argTypesSize);
 }
 
 void getMessage(int messageLength, MessageType msgType, char * message) {
