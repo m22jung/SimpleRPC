@@ -18,83 +18,9 @@
 #include <utility>
 using namespace std;
 
+vector<SkeletonData*> localDatabase;
 int sockfd_client, sockfd_binder, port;
 char SERVER_ADDRESS[1024];
-
-struct argT {
-	bool input;
-	bool output;
-	int type;
-	bool array;
-
-	argT(bool input, bool output, int type, bool array);
-};
-
-argT::argT(bool input, bool output, int type, bool array)
-: input(input), output(output), type(type), array(array) {}
-
-struct SkeletonData {
-	char name[64];
-	skeleton f;
-	vector< argT* > argTv;
-	int argTypesSize;
-
-	SkeletonData(char *n, int *argTypes, skeleton f);
-	~SkeletonData();
-};
-
-void generateArgTvector(int *argTypes, vector< argT* > &v);
-
-SkeletonData::SkeletonData(char *n, int *argTypes, skeleton f) : f(f) {
-	memcpy(name, n, 64);
-	printf("\nSkeletonData::name = %s\n", name);
-
-	generateArgTvector(argTypes, argTv);
-	argTypesSize = argTv.size();
-}
-
-SkeletonData::~SkeletonData() {
-	for (int i = 0; i < argTypesSize; ++i) {
-		delete argTv[i];
-	}
-}
-
-vector<SkeletonData*> localDatabase;
-
-void generateArgTvector(int *argTypes, vector< argT* > &v) {
-	for (int i = 0; ; ++i) {
-		if (argTypes[i] == 0) break; // end of argTypes
-
-		bool input, output, array;
-		int type;
-
-		int io = (argTypes[i] >> ARG_OUTPUT) & 0x00000003;
-		cout << "int io=" << io;
-		switch (io) {
-			case 3:
-				input = true;
-				output = true;
-				break;
-			case 2:
-				input = true;
-				break;
-			case 1:
-				output = true;
-				break;
-			case 0: // false for both
-				break;
-		}
-
-		type = (argTypes[i] >> 16) & 0x00000006;
-		cout << " type=" << type;
-
-		int arraysize = argTypes[i] & 0x0000FFFF;
-		cout << " arraysize=" << arraysize << endl;
-		if (arraysize != 0) array = true;
-
-		v.push_back(new argT(input, output, type, array));
-	}
-}
 
 int rpcInit() {
 	int binder_port;

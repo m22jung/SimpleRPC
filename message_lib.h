@@ -21,6 +21,27 @@ enum MessageType {
     TERMINATE = 10
 };
 
+struct argT {
+    bool input;
+    bool output;
+    int type;
+    bool array;
+
+    argT(bool input, bool output, int type, bool array);
+};
+
+struct SkeletonData {
+    char name[64];
+    skeleton f;
+    vector< argT* > argTv;
+    int argTypesSize;
+
+    SkeletonData(char *n, int *argTypes, skeleton f);
+    ~SkeletonData();
+};
+
+void generateArgTvector(int *argTypes, vector< argT* > &v);
+
 //int getMessageSize(const char* name, int* argTypes, void**args); // execute, exe success
 //int getMessageSize(const char* name, int* argTypes); // loc request
 //int getMessageSize(char * server_identifer, int port, const char* name, int* argTypes); // register

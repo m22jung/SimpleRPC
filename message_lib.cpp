@@ -13,6 +13,58 @@
 #include <unistd.h>
 #include "string.h"
 
+argT::argT(bool input, bool output, int type, bool array)
+: input(input), output(output), type(type), array(array) {}
+
+SkeletonData::SkeletonData(char *n, int *argTypes, skeleton f) : f(f) {
+    memcpy(name, n, 64);
+    printf("\nSkeletonData::name = %s\n", name);
+
+    generateArgTvector(argTypes, argTv);
+    argTypesSize = argTv.size();
+}
+
+SkeletonData::~SkeletonData() {
+    for (int i = 0; i < argTypesSize; ++i) {
+        delete argTv[i];
+    }
+}
+
+void generateArgTvector(int *argTypes, vector< argT* > &v) {
+    for (int i = 0; ; ++i) {
+        if (argTypes[i] == 0) break; // end of argTypes
+
+        bool input, output, array;
+        int type;
+
+        int io = (argTypes[i] >> ARG_OUTPUT) & 0x00000003;
+        cout << "int io=" << io;
+        switch (io) {
+            case 3:
+                input = true;
+                output = true;
+                break;
+            case 2:
+                input = true;
+                break;
+            case 1:
+                output = true;
+                break;
+            case 0: // false for both
+                break;
+        }
+
+        type = (argTypes[i] >> 16) & 0x00000006;
+        cout << " type=" << type;
+
+        int arraysize = argTypes[i] & 0x0000FFFF;
+        cout << " arraysize=" << arraysize << endl;
+        if (arraysize != 0) array = true;
+
+        v.push_back(new argT(input, output, type, array));
+    }
+}
+
 int getMessageSize(const char * name, int * argTypes, void** args) {
     int nameLength = 64;
     int argTypesLength = 0;
