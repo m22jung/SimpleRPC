@@ -22,11 +22,11 @@ SkeletonData::SkeletonData(char *n, int *argTypes, skeleton f) : f(f) {
     printf("SkeletonData::name = %s\n", name);
 
     generateArgTvector(argTypes, argTv);
-    argTypesSize = argTv.size();
+    num_argTv = argTv.size();
 }
 
 SkeletonData::~SkeletonData() {
-    for (int i = 0; i < argTypesSize; ++i) {
+    for (int i = 0; i < num_argTv; ++i) {
         delete argTv[i];
     }
 }

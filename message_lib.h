@@ -36,7 +36,7 @@ struct SkeletonData {
     char name[64];
     skeleton f;
     std::vector< argT* > argTv;
-    int argTypesSize;
+    int num_argTv;
 
     SkeletonData(char *n, int *argTypes, skeleton f);
     ~SkeletonData();

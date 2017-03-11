@@ -109,7 +109,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 		cout << "negative result" << endl;
 		return result;
 	}
-	
+
 	// generate argument information for this request
 	vector< argT* > v;
 	cout << "Registering argTypes:" << endl;
@@ -136,7 +136,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 		if (!flag_samename) continue; // move to next data
 
 		// check if number of arguments is same
-		if (vsize != localDatabase[i]->argTypesSize) continue; // move to next data
+		if (vsize != localDatabase[i]->num_argTv) continue; // move to next data
 
 		bool flag_sameArg = true;
 
