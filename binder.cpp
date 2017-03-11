@@ -139,18 +139,20 @@ int main() {
                     char *server_identifier = new char[1024];
                     int port;
                     char *name = new char[64];
-                    int* argTypes = new int[(len - 1024 - 4 - 64) / 4];
+                    int argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
+                    int* argTypes = new int[argTypeslen];
+                    int receiveResult;
 
                     switch (type) {
                     	case REGISTER:
                     		cout << "REGISTER" << endl;
-                            int receiveResult = receiveRegRequest(len, message, server_identifier, port, name, argTypes);
-                            cout << "Server_ideitifier: " << (void *)server_identifier << endl;
+                            receiveResult = receiveRegRequest(len, message, server_identifier, port, name, argTypes);
+                            printf("Server_ideitifier: %s\n", server_identifier);
                             cout << "port: " << port << endl;
-                            cout << "name: " << (void *)name << endl;
-                            int i = 0;
-                            while(argTypes[i]) {
-                                cout << "arg type " << i << " is " << argTypes[i] << endl;
+                            printf("name: %s\n", name);
+                            
+                            for (int j = 0; j < argTypeslen; ++j) {
+                                cout << "arg type " << j << " is " << argTypes[j] << endl;
                             }
                             if (receiveResult < 0) {
                                 // error

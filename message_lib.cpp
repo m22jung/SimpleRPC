@@ -274,20 +274,20 @@ int receiveRegRequest(int msgLength, char *message, char *server_identifier, int
 //    }
 
     // extract server_identifier
-    memset(server_identifier, 0, 1024);
+    memcpy(server_identifier, message + 8, 1024);
 
     // extract port
-    port = (int)((unsigned char)(message[1024]) << 24 |
-                    (unsigned char)(message[1025]) << 16 |
-                    (unsigned char)(message[1026]) << 8 |
-                    (unsigned char)(message[1027]) );
+    port = (int)((unsigned char)(message[1032]) << 24 |
+                    (unsigned char)(message[1033]) << 16 |
+                    (unsigned char)(message[1034]) << 8 |
+                    (unsigned char)(message[1035]) );
 
     // extract name
-    memset(name, 1028, 64);
+    memcpy(name, message + 1036, 64);
 
-    int argTypesLength = msgLength - 1024 - 4 - 64;
+    int argTypesLength = msgLength - 8 - 1024 - 4 - 64;
     // extract argTypes
-    memset(argTypes, 1092, argTypesLength);
+    memcpy(argTypes, message + 1100, argTypesLength);
 
     return 0;
 }

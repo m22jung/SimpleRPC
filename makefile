@@ -1,8 +1,8 @@
 CXX = g++				# compiler
 CXXFLAGS = -std=c++11   # compiler flags
 
-OBJECTS1 = binder.o     # object files forming executable
-EXEC1 = binder			# given executable name
+OBJECTS1 = binder.o message_lib.o   # object files forming executable
+EXEC1 = binder						# given executable name
 
 OBJECTS2 = rpc_server.o message_lib.o
 EXEC2 = librpc.a
