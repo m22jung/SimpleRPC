@@ -43,21 +43,33 @@ struct SkeletonData {
 	~SkeletonData();
 };
 
+void generateArgTvector(int *argTypes, vector< argT* > &v);
+
 SkeletonData::SkeletonData(char *n, int *argTypes, skeleton f) : f(f) {
 	memcpy(name, n, 64);
 	printf("\nSkeletonData::name = %s\n", name);
 
+	generateArgTvector(argTypes, argTv);
+	argTypesSize = argTv.size();
+}
+
+SkeletonData::~SkeletonData() {
+	for (int i = 0; i < argTypesSize; ++i) {
+		delete argTv[i];
+	}
+}
+
+vector<SkeletonData*> localDatabase;
+
+void generateArgTvector(int *argTypes, vector< argT* > &v) {
 	for (int i = 0; ; ++i) {
-		if (argTypes[i] == 0) { // end of argTypes
-			argTypesSize = i - 1;
-			break;
-		}
+		if (argTypes[i] == 0) break; // end of argTypes
 
 		bool input, output, array;
 		int type;
 
 		int io = (argTypes[i] >> ARG_OUTPUT) & 0x00000003;
-		cout << "int io=" << io << endl;
+		cout << "int io=" << io;
 		switch (io) {
 			case 3:
 				input = true;
@@ -74,34 +86,15 @@ SkeletonData::SkeletonData(char *n, int *argTypes, skeleton f) : f(f) {
 		}
 
 		type = (argTypes[i] >> 16) & 0x00000006;
-		cout << "type=" << type << endl;
+		cout << " type=" << type;
 
 		int arraysize = argTypes[i] & 0x0000FFFF;
-		cout << "arraysize=" << arraysize << endl;
+		cout << " arraysize=" << arraysize << endl;
 		if (arraysize != 0) array = true;
 
-		argTv.push_back(new argT(input, output, type, array));
+		v.push_back(new argT(input, output, type, array));
 	}
 }
-// argTypes0[0] = (1 << ARG_OUTPUT) | (ARG_INT << 16);
-// argTypes3[0] = (1 << ARG_OUTPUT) | (1 << ARG_INPUT) | (ARG_LONG << 16) | 11;
-// message[0] = (messageLength >> 24) & 0xFF;
-// message[1] = (messageLength >> 16) & 0xFF;
-// message[2] = (messageLength >> 8) & 0xFF;
-// message[3] = messageLength & 0xFF;
-
-// len = (int)((unsigned char)(buffer[0]) << 24 |
-// (unsigned char)(buffer[1]) << 16 |
-// (unsigned char)(buffer[2]) << 8 |
-// (unsigned char)(buffer[3]) );
-
-SkeletonData::~SkeletonData() {
-	for (int i = 0; i < argTypesSize; ++i) {
-		delete argTv[i];
-	}
-}
-
-vector<SkeletonData*> localDatabase;
 
 int rpcInit() {
 	int binder_port;
@@ -193,9 +186,29 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 
 	// makes an entry in a local database, associating the server skeleton with
 	// name and list of argument types.
+
+	// int localDatabaseSize = localDatabase.size();
+	// bool sameData = false;
+
+	// for (int i = 0; i < localDatabaseSize; ++i) {
+	// 	bool samename = true;
+	// 	for (int j = 0; j <= 64; ++j) {
+	// 		if (localDatabase[i]->name[j] == '\0' && name[j] == '\0') break; // has same name
+	// 		if (localDatabase[i]->name[j] != name[j]) {
+	// 			samename = false;
+	// 			break;
+	// 		}
+	// 	}
+	// 	if (!samename) continue; // move to next data
+
+	// 	if (localDatabase[i]->argTypesSize != ) continue; // move to next data
+	// }
+	
+	// if (!sameData) {
+	// 	localDatabase.push_back(new SkeletonData(name, argTypes, f));
+	// }
+
 	localDatabase.push_back(new SkeletonData(name, argTypes, f));
-	char c;
-	cin >> c;
 	// don't forget to delete on termination
 
 	return result;

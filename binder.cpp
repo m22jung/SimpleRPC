@@ -113,7 +113,6 @@ int main() {
                 cout << "Length: " << len << ", TYPE: " << type << endl;
 
                 char *message = new char[len];
-                memcpy(message, buffer, 8);
 
                 if (read(fd, message + 8, len - 8) < 0) {
                     cerr << "ERROR reading from socket" << endl;
