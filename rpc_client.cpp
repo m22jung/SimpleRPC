@@ -10,49 +10,108 @@
 #include "rpc.h"
 #include "message_lib.h"
 #include "type_lib.h"
+#include <unistd.h>
+#include <netdb.h>
+#include <string.h>
 
 using namespace std;
 
-static int binderSocket = -1;
+int binderSocket = -1;
+int serverSocket = -1;
 
 // LENGTH, TYPE, MESSAGE
 
-int createSocket(char * addr, int port) {
-    int socket;
-    struct sockaddr_in address;
+int createServerSocket(char * addr, int port) {
+    struct sockaddr_in server_addr;
+    struct hostent *server;
 
-    socket = socket(PF_INET, SOCK_STREAM, 0);
+    server = gethostbyname(addr);
 
-    if (socket == -1) {
-        return SOCKET_NOT_SETUP;
+    if (server == NULL) {
+        cerr << "ERROR, no such host" << endl;
+        return -1;
     }
 
-    address.sin_addr.s_addr = inet_addr(addr);
-    address.sin_family = AF_INET;
-    address.sin_port = htons(port);
-
-    if (connect(socket, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        return SOCKET_CONNECTION_FAILED;
+    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocket < 0) {
+        cerr << "ERROR opening socket" << endl;
+        return -1;
     }
 
-    return socket;
+    bzero((char *) &server_addr, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+
+    bcopy((char *)server->h_addr, (char *)&server_addr.sin_addr.s_addr, server->h_length);
+    server_addr.sin_port = htons(port);
+
+    if (connect(binderSocket,(struct sockaddr *) &server_addr,sizeof(server_addr)) < 0) {
+        cerr << "ERROR connecting" << endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+int createBinderSocket() {
+    cout << "creating binder socket " << endl;
+
+    int binder_port;
+    struct sockaddr_in binder_addr;
+    struct hostent *binder;
+    char *BINDER_PORT = getenv("BINDER_PORT");
+    if (BINDER_PORT == NULL) {
+        cerr << "ERROR, BINDER_PORT does not exist" << endl;
+        return -1;
+    }
+    binder_port = atoi(BINDER_PORT);
+
+    char *BINDER_ADDRESS = getenv("BINDER_ADDRESS");
+    if (BINDER_ADDRESS == NULL) {
+        cerr << "ERROR, BINDER_ADDRESS does not exist" << endl;
+        return -1;
+    }
+    binder = gethostbyname( BINDER_ADDRESS );
+    if (binder == NULL) {
+        cerr << "ERROR, no such host" << endl;
+        return -1;
+    }
+
+    binderSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (binderSocket < 0) {
+        cerr << "ERROR opening socket" << endl;
+        return -1;
+    }
+
+    bzero((char *) &binder_addr, sizeof(binder_addr));
+    binder_addr.sin_family = AF_INET;
+
+    bcopy((char *)binder->h_addr, (char *)&binder_addr.sin_addr.s_addr, binder->h_length);
+    binder_addr.sin_port = htons(binder_port);
+
+    if (connect(binderSocket,(struct sockaddr *) &binder_addr,sizeof(binder_addr)) < 0) {
+        cerr << "ERROR connecting" << endl;
+        return -1;
+    }
+
+    return 0;
+
 }
 
 int sendLocationRequestMessage(char * name, int argTypes[]) {
 
     if (binderSocket < 0) { // // set up binder socket if not defined
-        char * binderAddressString = getenv ("BINDER_ADDRESS");
-        if(binderAddressString == NULL) {
-            return BINDER_ADDR_NOT_FOUND;
-        }
-        char * binderPortString = getenv("BINDER_PORT");
-        if (binderPortString == NULL) {
-            return BINDER_PORT_NOT_FOUND;
-        }
+//        char * binderAddressString = getenv ("BINDER_ADDRESS");
+//        if(binderAddressString == NULL) {
+//            return BINDER_ADDR_NOT_FOUND;
+//        }
+//        char * binderPortString = getenv("BINDER_PORT");
+//        if (binderPortString == NULL) {
+//            return BINDER_PORT_NOT_FOUND;
+//        }
 
-        binderSocket = createSocket(binderAddressString, atoi(binderPortString));
+        int result = createBinderSocket();
 
-        if (binderSocket < 0) {
+        if (result < 0) {
             return BINDER_NOT_SETUP;
         }
     }
@@ -79,7 +138,7 @@ int sendTerminationMessage() {
             return BINDER_PORT_NOT_FOUND;
         }
 
-        binderSocket = createSocket(binderAddressString, atoi(binderPortString));
+        binderSocket = createBinderSocket();
 
         if (binderSocket < 0) {
             return BINDER_NOT_SETUP;
@@ -134,7 +193,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
     delete [] message;
 
     //then send execute-req msg to the server
-    int serverSocket = createSocket(server_identifier, port);
+    int serverSocket = createServerSocket(server_identifier, port);
 
     if (serverSocket < 0) {
         return SERVER_SOCKET_NOT_SETUP;
@@ -154,7 +213,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
     if (read(binderSocket, message + 8, length - 8) < 0) {
         return READING_SOCKET_ERROR;
     }
-    receiveNameAndArgTypeAndArgs(length, message, name, argTypes, args); // potential bug source
+//    receiveNameAndArgTypeAndArgs(length, message, name, argTypes, args); // potential bug source
 
     close(serverSocket);
 
