@@ -116,64 +116,62 @@ int main() {
                     socket_connected.erase(socket_connected.begin() + i);
                 } else if (receiveLengthAndTypeResult == READING_SOCKET_ERROR) {
                     goto begin;
+                } else {
+                    cout << "Length: " << len << ", TYPE: " << type << endl;
+
+                    char *message = new char[len];
+
+                    if (read(fd, message + 8, len - 8) < 0) {
+                        cerr << "ERROR reading from socket" << endl;
+                        goto begin;
+                    }
+
+                    char *server_identifier = new char[1024];
+                    int port;
+                    char *name = new char[64];
+                    int argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
+                    int *argTypes = new int[argTypeslen];
+                    int receiveResult;
+
+                    switch(type) {
+                        case REGISTER:
+                            cout << "REGISTER" << endl;
+
+                            receiveServerIdentifierAndPortAndNameAndArgType(len, message, server_identifier, port, name, argTypes);
+
+                            printf("Server_ideitifier: %s\n", server_identifier);
+                            cout << "port: " << port << endl;
+                            printf("name: %s\n", name);
+
+                            for (int j = 0; j < argTypeslen; ++j) {
+                                cout << "arg type " << j << " is " << argTypes[j] << endl;
+                            }
+
+                            //TODO: Add the incoming function to local db
+
+                            //TODO: send reg sucess back
+
+
+                            break;
+                        case LOC_REQUEST:
+                            cout << "LOC_REQUEST" << endl;
+
+                            receiveNameAndArgType(len, message, name, argTypes);
+
+                            // TODO: Find matching function, reply loc_success
+
+                            break;
+                        case TERMINATE:
+                            cout << "TERMINATE" << endl;
+
+                            // TODO: send termination msg to all servers
+
+                            flag_terminate = true;
+                            break;
+                    }
+
+                    delete[] message;
                 }
-
-
-
-                cout << "Length: " << len << ", TYPE: " << type << endl;
-
-                char *message = new char[len];
-
-                if (read(fd, message + 8, len - 8) < 0) {
-                    cerr << "ERROR reading from socket" << endl;
-                    goto begin;
-                }
-
-                char *server_identifier = new char[1024];
-                int port;
-                char *name = new char[64];
-                int argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
-                int *argTypes = new int[argTypeslen];
-                int receiveResult;
-
-                switch(type) {
-                    case REGISTER:
-                        cout << "REGISTER" << endl;
-
-                        receiveServerIdentifierAndPortAndNameAndArgType(len, message, server_identifier, port, name, argTypes);
-
-                        printf("Server_ideitifier: %s\n", server_identifier);
-                        cout << "port: " << port << endl;
-                        printf("name: %s\n", name);
-
-                        for (int j = 0; j < argTypeslen; ++j) {
-                            cout << "arg type " << j << " is " << argTypes[j] << endl;
-                        }
-
-                        //TODO: Add the incoming function to local db
-
-                        //TODO: send reg sucess back
-
-
-                        break;
-                    case LOC_REQUEST:
-                        cout << "LOC_REQUEST" << endl;
-
-                        receiveNameAndArgType(len, message, name, argTypes);
-
-                        // TODO: Find matching function, reply loc_success
-
-                        break;
-                    case TERMINATE:
-                        cout << "TERMINATE" << endl;
-
-                        // TODO: send termination msg to all servers
-
-                        flag_terminate = true;
-                        break;
-                }
-
-                delete[] message;
             } // if
         } // for
 
