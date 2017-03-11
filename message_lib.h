@@ -5,7 +5,9 @@
 #ifndef A03_MESSAGE_LIB_H
 #define A03_MESSAGE_LIB_H
 
+#include "rpc.h"
 #include <iostream>
+#include <vector>
 
 enum MessageType {
     ERROR = 0,
@@ -33,14 +35,14 @@ struct argT {
 struct SkeletonData {
     char name[64];
     skeleton f;
-    vector< argT* > argTv;
+    std::vector< argT* > argTv;
     int argTypesSize;
 
     SkeletonData(char *n, int *argTypes, skeleton f);
     ~SkeletonData();
 };
 
-void generateArgTvector(int *argTypes, vector< argT* > &v);
+void generateArgTvector(int *argTypes, std::vector< argT* > &v);
 
 //int getMessageSize(const char* name, int* argTypes, void**args); // execute, exe success
 //int getMessageSize(const char* name, int* argTypes); // loc request

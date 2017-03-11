@@ -109,33 +109,60 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 		cout << "negative result" << endl;
 		return result;
 	}
+	
+	// generate argument information for this request
+	vector< argT* > v;
+	cout << "Registering argTypes:" << endl;
+	printf("SkeletonData::name = %s\n", name);
+	generateArgTvector(argTypes, v);
+	int vsize = v.size();
 
 	// makes an entry in a local database, associating the server skeleton with
 	// name and list of argument types.
+	int localDatabaseSize = localDatabase.size();
+	int sameDataIndex = -1;
 
-	// int localDatabaseSize = localDatabase.size();
-	// bool sameData = false;
+	for (int i = 0; i < localDatabaseSize; ++i) {
+		bool flag_samename = true;
 
-	// for (int i = 0; i < localDatabaseSize; ++i) {
-	// 	bool samename = true;
-	// 	for (int j = 0; j <= 64; ++j) {
-	// 		if (localDatabase[i]->name[j] == '\0' && name[j] == '\0') break; // has same name
-	// 		if (localDatabase[i]->name[j] != name[j]) {
-	// 			samename = false;
-	// 			break;
-	// 		}
-	// 	}
-	// 	if (!samename) continue; // move to next data
+		// check if function name is same
+		for (int j = 0; j < 64; ++j) {
+			if (name[j] == '\0' && localDatabase[i]->name[j] == '\0') break; // has same name
+			if (name[j] != localDatabase[i]->name[j]) {
+				flag_samename = false;
+				break;
+			}
+		}
+		if (!flag_samename) continue; // move to next data
 
-	// 	if (localDatabase[i]->argTypesSize != ) continue; // move to next data
-	// }
+		// check if number of arguments is same
+		if (vsize != localDatabase[i]->argTypesSize) continue; // move to next data
+
+		bool flag_sameArg = true;
+
+		// check if argument types are same
+		for (int j = 0; j < vsize; ++j) {
+			if (v[j]->type != (localDatabase[i]->argTv)[j]->type ||
+				v[j]->array != (localDatabase[i]->argTv)[j]->array) { // has different arg type
+				flag_sameArg = false;
+				break;
+			}
+		}
+		if (!flag_sameArg) continue; // move to next data
+
+		sameDataIndex = i;
+		break;
+	}
 	
-	// if (!sameData) {
-	// 	localDatabase.push_back(new SkeletonData(name, argTypes, f));
-	// }
-
-	localDatabase.push_back(new SkeletonData(name, argTypes, f));
-	// don't forget to delete on termination
+	if (sameDataIndex == -1) { // add new SkeletonData
+		cout << "\nFunction skeleton added:" << endl;
+		localDatabase.push_back(new SkeletonData(name, argTypes, f));
+	} else { // replace function skeleton
+		cout << "\nSame function added (replace function skeleton)" << endl;
+		localDatabase[sameDataIndex]->f = f;
+	}
+	cout << endl;
+	// don't forget to delete local database on termination
 
 	return result;
 }

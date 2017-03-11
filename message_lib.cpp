@@ -18,7 +18,8 @@ argT::argT(bool input, bool output, int type, bool array)
 
 SkeletonData::SkeletonData(char *n, int *argTypes, skeleton f) : f(f) {
     memcpy(name, n, 64);
-    printf("\nSkeletonData::name = %s\n", name);
+    name[64] = '\0';
+    printf("SkeletonData::name = %s\n", name);
 
     generateArgTvector(argTypes, argTv);
     argTypesSize = argTv.size();
