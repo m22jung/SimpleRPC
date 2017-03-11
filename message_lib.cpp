@@ -283,7 +283,7 @@ int receiveLengthAndType(int socket, int &length, int &msgType) {
     int valread = read(socket, buffer, 8);
 
     if (valread == 0) { // disconnected
-        return SOCKET_NOT_SETUP;
+        return SOCKET_CONNECTION_FINISHED;
     } else if (valread < 0) {
         cerr << "ERROR reading from socket" << endl;
         return READING_SOCKET_ERROR;

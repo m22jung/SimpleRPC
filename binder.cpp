@@ -1,5 +1,6 @@
 #include "rpc.h"
 #include "message_lib.h"
+#include "type_lib.h"
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/time.h> // FD_SET, FD_ISSET, FD_ZERO macros
@@ -108,7 +109,16 @@ int main() {
                 cout << "-READ- ";
 
                 int len, type;
-                receiveLengthAndType(fd, len, type);
+                int receiveLengthAndTypeResult = receiveLengthAndType(fd, len, type);
+                if (receiveLengthAndTypeResult == SOCKET_CONNECTION_FINISHED) {
+                    close(fd);
+                    cout << "fd=" << fd << " disconnected" << endl;
+                    socket_connected.erase(socket_connected.begin() + i);
+                } else if (receiveLengthAndTypeResult == READING_SOCKET_ERROR) {
+                    goto begin;
+                }
+
+
 
                 cout << "Length: " << len << ", TYPE: " << type << endl;
 
