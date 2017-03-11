@@ -44,7 +44,7 @@ int sendExecSuccessAfterFormatting(int socket, char * name, int * argTypes, void
 int sendExecFailureAfterFormatting(int socket, int reasonCode);
 int sendTerminateAfterFormatting(int socket);
 
-int receiveRegRequest(int msgLength, char * message, char * server_identifier, int port, char * name, int * argTypes);
+int receiveRegRequest(int msgLength, char * message, char * server_identifier, int &port, char * name, int * argTypes);
 int receiveRegResult();
 int receiveLocRequest();
 int receiveLocResult();

@@ -136,13 +136,14 @@ int main() {
                         goto begin;
                     }
 
+                    char *server_identifier = new char[1024];
+                    int port;
+                    char *name = new char[64];
+                    int* argTypes = new int[(len - 1024 - 4 - 64) / 4];
+
                     switch (type) {
                     	case REGISTER:
                     		cout << "REGISTER" << endl;
-                            char server_identifier[1024];
-                            int port;
-                            char name[64];
-                            int* argTypes;
                             int receiveResult = receiveRegRequest(len, message, server_identifier, port, name, argTypes);
                             cout << "Server_ideitifier: " << (void *)server_identifier << endl;
                             cout << "port: " << port << endl;

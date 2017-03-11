@@ -267,7 +267,7 @@ int sendTerminateAfterFormatting(int socket) {
     return sentData;
 }
 
-int receiveRegRequest(int msgLength, char *message, char server_identifier[], int &port, char name[], int argTypes[]) {
+int receiveRegRequest(int msgLength, char *message, char *server_identifier, int &port, char *name, int *argTypes) {
 //    if (msgLength != sizeof(message)) {
 //        // error
 //        return error;
