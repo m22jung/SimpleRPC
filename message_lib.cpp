@@ -149,7 +149,11 @@ void getMessage(unsigned int messageLength, MessageType msgType, char * message,
 
     memcpy(message + 8, name, 64);
 
-    memcpy(message + 72, argTypes, sizeof(argTypes));
+    int argTypesLength = 0;
+    while (argTypes[argTypesLength++]);
+    int argTypesSize = argTypesLength * 4;
+
+    memcpy(message + 72, argTypes, argTypesSize);
 }
 void getMessage(int messageLength, MessageType msgType, char * message, char * server_identifier, int port, const char* name, int* argTypes) {
     putMsglengthAndMsgType(messageLength, msgType, message);

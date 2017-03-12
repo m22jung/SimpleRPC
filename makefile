@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++11   # compiler flags
 OBJECTS1 = binder.o message_lib.o   # object files forming executable
 EXEC1 = binder						# given executable name
 
-OBJECTS2 = rpc_server.o message_lib.o
+OBJECTS2 = rpc_server.o message_lib.o rpc_client.o
 EXEC2 = librpc.a
 
 OBJECTS = ${OBJECTS1} ${OBJECTS2}
