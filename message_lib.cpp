@@ -66,6 +66,19 @@ void generateArgTvector(int *argTypes, vector< argT* > &v) {
     }
 }
 
+bool sameName(char* n1, char* n2) {
+    bool flag_samename = true;
+
+    for (int j = 0; j < 64; ++j) {
+        if (n1[j] == '\0' && n2[j] == '\0') break; // has same name
+        if (n1[j] != n2[j]) {
+            flag_samename = false;
+            break;
+        }
+    }
+    return flag_samename;
+}
+
 int getMessageSize(const char * name, int * argTypes, void** args) {
     int nameLength = 64;
     int argTypesLength = 0;

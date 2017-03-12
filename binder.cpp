@@ -14,17 +14,55 @@
 #include <cstdlib>
 #include <cctype>
 #include <vector>
+#include <utility>
 
 using namespace std;
 
 struct FunctionData {
     char name[64];
-    int *argTypes;
-    char hostname[1024];
-    int port;
+    vector< argT* > argTv;
+    int num_argTv;
+    vector< pair<char*, int> > servers; // pair<hostname, port>
+    int num_servers;
 
-    FunctionData(char *n, int *argTypes, skeleton f, char *hn, int port);
+    FunctionData(char *n, int *argTypes);
+    ~FunctionData();
+    bool serverInList(char* hn, int port);
+    void addServerToList(char* hn, int port);
 };
+
+FunctionData::FunctionData(char *n, int *argTypes) {
+    memcpy(name, n, 64);
+    name[64] = '\0';
+    printf("FunctionData::name = %s\n", name);
+
+    generateArgTvector(argTypes, argTv);
+    num_argTv = argTv.size();
+    num_servers = 0;
+}
+
+FunctionData::~FunctionData() {
+    for (int i = 0; i < num_argTv; ++i) {
+        delete argTv[i];
+    }
+}
+
+bool FunctionData::serverInList(char* hn, int port) {
+    for (int i = 0; i < num_servers; ++i) {
+        if (!sameName(hn, servers[i].first)) continue;
+        if (port == servers[i].second) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void FunctionData::addServerToList(char* hn, int port) {
+    servers.push_back(make_pair(hn, port));
+    num_servers++;
+    printf("hostname=%s ", hn);
+    cout << "port=" << port << endl;
+}
 
 // setup() opens and binds socket, prints address and port number
 void setup(int *sockfd, struct sockaddr_in *address) {
@@ -73,7 +111,7 @@ int main() {
     }
 
     vector<int> socket_connected; // list of sockets connected. servers stay connected whole time.
-    vector<FunctionData *> database; // database for server functions registered by servers
+    vector<FunctionData*> database; // database for server functions registered by servers
 
     while (!flag_terminate) { // for as many requests
         begin:
@@ -132,6 +170,7 @@ int main() {
                     int argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
                     int *argTypes = new int[argTypeslen];
                     int receiveResult;
+                    int sameDataIndex;
 
                     switch(type) {
                         case REGISTER:
@@ -143,14 +182,25 @@ int main() {
                             cout << "port: " << port << endl;
                             printf("name: %s\n", name);
 
-                            for (int j = 0; j < argTypeslen; ++j) {
-                                cout << "arg type " << j << " is " << argTypes[j] << endl;
+                            //TODO: Add the incoming function to db
+                            sameDataIndex = matchingArgT<vector<FunctionData*>>(name, argTypes, &database);
+    
+                            if (sameDataIndex == -1) { // add new FunctionData
+                                cout << "FunctionData added:" << endl;
+                                database.push_back(new FunctionData(name, argTypes));
+                                (database.back())->addServerToList(name, port);
+                            } else {
+                                // check if host name and port number is in server list
+                                if (database[sameDataIndex]->serverInList(name, port)) {
+                                    cout << "server hostname and port exists in database" << endl;
+                                } else {
+                                    cout << "non-existing hostname and port added to function: ";
+                                    printf("%s\n", database[sameDataIndex]->name);
+                                    database[sameDataIndex]->addServerToList(name, port);
+                                }
                             }
 
-                            //TODO: Add the incoming function to local db
-
                             //TODO: send reg sucess back
-
 
                             break;
                         case LOC_REQUEST:
@@ -174,6 +224,6 @@ int main() {
                 }
             } // if
         } // for
-
+        cout << endl;
     } // while
 } // main

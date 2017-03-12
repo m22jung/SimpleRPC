@@ -15,7 +15,6 @@
 #include <cstdlib>
 #include <cctype>
 #include <vector>
-#include <utility>
 using namespace std;
 
 vector<SkeletonData*> localDatabase;
@@ -105,54 +104,13 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 	// list of argument type is avaliable at the server.
 	// ...(send protocol to binder)...
 	int result = sendRegRequestAfterFormatting(sockfd_binder, SERVER_ADDRESS, port, name, argTypes);
+	cout << "rpcRegister Request result = " << result << endl;
 	if (result < 0) {
 		cout << "negative result" << endl;
 		return result;
 	}
 
-	// generate argument information for this request
-	vector< argT* > v;
-	cout << "Registering argTypes:" << endl;
-	printf("SkeletonData::name = %s\n", name);
-	generateArgTvector(argTypes, v);
-	int vsize = v.size();
-
-	// makes an entry in a local database, associating the server skeleton with
-	// name and list of argument types.
-	int localDatabaseSize = localDatabase.size();
-	int sameDataIndex = -1;
-
-	for (int i = 0; i < localDatabaseSize; ++i) {
-		bool flag_samename = true;
-
-		// check if function name is same
-		for (int j = 0; j < 64; ++j) {
-			if (name[j] == '\0' && localDatabase[i]->name[j] == '\0') break; // has same name
-			if (name[j] != localDatabase[i]->name[j]) {
-				flag_samename = false;
-				break;
-			}
-		}
-		if (!flag_samename) continue; // move to next data
-
-		// check if number of arguments is same
-		if (vsize != localDatabase[i]->num_argTv) continue; // move to next data
-
-		bool flag_sameArg = true;
-
-		// check if argument types are same
-		for (int j = 0; j < vsize; ++j) {
-			if (v[j]->type != (localDatabase[i]->argTv)[j]->type ||
-				v[j]->array != (localDatabase[i]->argTv)[j]->array) { // has different arg type
-				flag_sameArg = false;
-				break;
-			}
-		}
-		if (!flag_sameArg) continue; // move to next data
-
-		sameDataIndex = i;
-		break;
-	}
+	int sameDataIndex = matchingArgT<vector<SkeletonData*>>(name, argTypes, &localDatabase);
 	
 	if (sameDataIndex == -1) { // add new SkeletonData
 		cout << "\nFunction skeleton added:" << endl;
