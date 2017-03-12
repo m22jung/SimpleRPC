@@ -31,6 +31,45 @@ SkeletonData::~SkeletonData() {
     }
 }
 
+FunctionData::FunctionData(char *n, int *argTypes) {
+    memcpy(name, n, 64);
+    name[64] = '\0';
+    printf("FunctionData::name = %s\n", name);
+
+    generateArgTvector(argTypes, argTv);
+    num_argTv = argTv.size();
+}
+
+FunctionData::~FunctionData() {
+    for (int i = 0; i < num_argTv; ++i) {
+        delete argTv[i];
+    }
+}
+
+ServerData::ServerData(char* hn, int port) : port(port) {
+    memcpy(hostname, hn, 1024);
+}
+
+ServerData::~ServerData() {
+    for (int i = 0; i < num_fns; ++i) {
+        delete fns[i];
+    }
+}
+
+bool ServerData::functionInList(FunctionData* fdata) {
+    for (int i = 0; i < num_fns; ++i) {
+        if (matchingArgT(fdata->name, &(fdata->argTv), &fns) != -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void ServerData::addFunctionToList(FunctionData* fdata) {
+    fns.push_back(fdata);
+    num_fns++;
+}
+
 void generateArgTvector(int *argTypes, vector< argT* > &v) {
     for (int i = 0; ; ++i) {
         if (argTypes[i] == 0) break; // end of argTypes
@@ -39,7 +78,7 @@ void generateArgTvector(int *argTypes, vector< argT* > &v) {
         int type;
 
         int io = (argTypes[i] >> ARG_OUTPUT) & 0x00000003;
-        cout << "int io=" << io;
+        //cout << "int io=" << io;
         switch (io) {
             case 3:
                 input = true;
@@ -56,10 +95,10 @@ void generateArgTvector(int *argTypes, vector< argT* > &v) {
         }
 
         type = (argTypes[i] >> 16) & 0x00000006;
-        cout << " type=" << type;
+        //cout << " type=" << type;
 
         int arraysize = argTypes[i] & 0x0000FFFF;
-        cout << " arraysize=" << arraysize << endl;
+        //cout << " arraysize=" << arraysize << endl;
         if (arraysize != 0) array = true;
 
         v.push_back(new argT(input, output, type, array));
@@ -77,6 +116,94 @@ bool sameName(char* n1, char* n2) {
         }
     }
     return flag_samename;
+}
+
+bool sameServerName(char* n1, char* n2) {
+    bool flag_samename = true;
+
+    for (int j = 0; j < 1024; ++j) {
+        if (n1[j] == '\0' && n2[j] == '\0') break; // has same name
+        if (n1[j] != n2[j]) {
+            flag_samename = false;
+            break;
+        }
+    }
+    return flag_samename;
+}
+
+// returns index of database that matches name and argTypes otherwise, return -1
+int matchingArgT(char* name, int *argTypes, std::vector<SkeletonData*> *database) {
+    std::vector< argT* > v;
+
+    std::cout << "Received name and argTypes:" << std::endl;
+    printf("name = %s\n", name);
+
+    generateArgTvector(argTypes, v);
+    int vsize = v.size();
+
+    // makes an entry in a local database, associating the server skeleton with
+    // name and list of argument types.
+    int localDatabaseSize = database->size();
+    int sameDataIndex = -1;
+
+    for (int i = 0; i < localDatabaseSize; ++i) {
+        // check if function name is same
+        if (!sameName(name, (*database)[i]->name)) continue; // move to next data
+
+        // check if number of arguments is same
+        if (vsize != (*database)[i]->num_argTv) continue; // move to next data
+
+        bool flag_sameArg = true;
+
+        // check if argument types are same
+        for (int j = 0; j < vsize; ++j) {
+            if (v[j]->type != ((*database)[i]->argTv)[j]->type ||
+                v[j]->array != ((*database)[i]->argTv)[j]->array) { // has different arg type
+                flag_sameArg = false;
+                break;
+            }
+        }
+        if (!flag_sameArg) continue; // move to next data
+
+        sameDataIndex = i;
+        break;
+    }
+
+    return sameDataIndex;
+}
+
+int matchingArgT(char* name, std::vector<argT*> *argv, std::vector<FunctionData*> *database) {
+    std::cout << "Received FunctionData:" << std::endl;
+    printf("name = %s\n", name);
+    
+    int vsize = argv->size();
+    int localDatabaseSize = database->size();
+    int sameDataIndex = -1;
+
+    for (int i = 0; i < localDatabaseSize; ++i) {
+        // check if function name is same
+        if (!sameName(name, (*database)[i]->name)) continue; // move to next data
+
+        // check if number of arguments is same
+        if (vsize != (*database)[i]->num_argTv) continue; // move to next data
+
+        bool flag_sameArg = true;
+
+        // check if argument types are same
+        for (int j = 0; j < vsize; ++j) {
+            if ((*argv)[j]->type != ((*database)[i]->argTv)[j]->type ||
+                (*argv)[j]->array != ((*database)[i]->argTv)[j]->array) { // has different arg type
+                flag_sameArg = false;
+                break;
+            }
+        }
+        if (!flag_sameArg) continue; // move to next data
+
+        sameDataIndex = i;
+        break;
+    }
+
+    return sameDataIndex;
 }
 
 int getMessageSize(const char * name, int * argTypes, void** args) {
@@ -149,11 +276,7 @@ void getMessage(unsigned int messageLength, MessageType msgType, char * message,
 
     memcpy(message + 8, name, 64);
 
-    int argTypesLength = 0;
-    while (argTypes[argTypesLength++]);
-    int argTypesSize = argTypesLength * 4;
-
-    memcpy(message + 72, argTypes, argTypesSize);
+    memcpy(message + 72, argTypes, sizeof(argTypes));
 }
 void getMessage(int messageLength, MessageType msgType, char * message, char * server_identifier, int port, const char* name, int* argTypes) {
     putMsglengthAndMsgType(messageLength, msgType, message);

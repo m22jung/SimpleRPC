@@ -18,52 +18,6 @@
 
 using namespace std;
 
-struct FunctionData {
-    char name[64];
-    vector< argT* > argTv;
-    int num_argTv;
-    vector< pair<char*, int> > servers; // pair<hostname, port>
-    int num_servers;
-
-    FunctionData(char *n, int *argTypes);
-    ~FunctionData();
-    bool serverInList(char* hn, int port);
-    void addServerToList(char* hn, int port);
-};
-
-FunctionData::FunctionData(char *n, int *argTypes) {
-    memcpy(name, n, 64);
-    name[64] = '\0';
-    printf("FunctionData::name = %s\n", name);
-
-    generateArgTvector(argTypes, argTv);
-    num_argTv = argTv.size();
-    num_servers = 0;
-}
-
-FunctionData::~FunctionData() {
-    for (int i = 0; i < num_argTv; ++i) {
-        delete argTv[i];
-    }
-}
-
-bool FunctionData::serverInList(char* hn, int port) {
-    for (int i = 0; i < num_servers; ++i) {
-        if (!sameName(hn, servers[i].first)) continue;
-        if (port == servers[i].second) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void FunctionData::addServerToList(char* hn, int port) {
-    servers.push_back(make_pair(hn, port));
-    num_servers++;
-    printf("hostname=%s ", hn);
-    cout << "port=" << port << endl;
-}
-
 // setup() opens and binds socket, prints address and port number
 void setup(int *sockfd, struct sockaddr_in *address) {
     socklen_t addrlen = sizeof(*address);
@@ -95,6 +49,20 @@ void setup(int *sockfd, struct sockaddr_in *address) {
     cout << "BINDER_PORT " << BINDER_PORT << endl;
 }
 
+// returns index of database that matches server/port otherwise, return -1
+int matchingServerPort(char *server_identifier, int port, vector<ServerData*> *database) {
+    int sameServerIndex = -1;
+    int databasesize = database->size();
+
+    for (int i = 0; i < databasesize; ++i) {
+        if (sameServerName(server_identifier, (*database)[i]->hostname)
+            && port == (*database)[i]->port) {
+            sameServerIndex = i;
+            break;
+        }
+    }
+    return sameServerIndex;
+}
 
 int main() {
     int sockfd, newsockfd, fd, maxfd, socket_n;
@@ -111,7 +79,7 @@ int main() {
     }
 
     vector<int> socket_connected; // list of sockets connected. servers stay connected whole time.
-    vector<FunctionData*> database; // database for server functions registered by servers
+    vector<ServerData*> database; // database for serverData registered by servers
 
     while (!flag_terminate) { // for as many requests
         begin:
@@ -170,56 +138,53 @@ int main() {
                     int argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
                     int *argTypes = new int[argTypeslen];
                     int receiveResult;
-                    int sameDataIndex;
+                    int sameServerIndex;
 
-                    switch(type) {
-                        case REGISTER:
+                    if (type == REGISTER) {
                             cout << "REGISTER" << endl;
 
                             receiveServerIdentifierAndPortAndNameAndArgType(len, message, server_identifier, port, name, argTypes);
 
-                            printf("Server_ideitifier: %s\n", server_identifier);
-                            cout << "port: " << port << endl;
-                            printf("name: %s\n", name);
+                            printf("Server_ideitifier: %s", server_identifier);
+                            cout << " port: " << port << endl;
+                            
+                            // new FunctionData from REGISTER
+                            FunctionData *fdata = new FunctionData(name, argTypes);
 
-                            //TODO: Add the incoming function to db
-                            sameDataIndex = matchingArgT<vector<FunctionData*>>(name, argTypes, &database);
-    
-                            if (sameDataIndex == -1) { // add new FunctionData
-                                cout << "FunctionData added:" << endl;
-                                database.push_back(new FunctionData(name, argTypes));
-                                (database.back())->addServerToList(name, port);
+                            // check if same server/port exists in database 
+                            sameServerIndex = matchingServerPort(server_identifier, port, &database);
+                            if (sameServerIndex == -1) {
+                                cout << "ServerData added" << endl;
+                                database.push_back(new ServerData(server_identifier, port));
+                                (database.back())->addFunctionToList(fdata);
                             } else {
-                                // check if host name and port number is in server list
-                                if (database[sameDataIndex]->serverInList(name, port)) {
-                                    cout << "server hostname and port exists in database" << endl;
+                                // check if FunctionData is in function list
+                                if (database[sameServerIndex]->functionInList(fdata)) {
+                                    cout << "Same FunctionData exists in database" << endl;
+                                    delete fdata;
                                 } else {
-                                    cout << "non-existing hostname and port added to function: ";
-                                    printf("%s\n", database[sameDataIndex]->name);
-                                    database[sameDataIndex]->addServerToList(name, port);
+                                    cout << "non-existing FunctionData added to server: ";
+                                    printf("%s port=%d\n", database[sameServerIndex]->hostname, database[sameServerIndex]->port);
+                                    database[sameServerIndex]->addFunctionToList(fdata);
                                 }
                             }
 
                             //TODO: send reg sucess back
 
-                            break;
-                        case LOC_REQUEST:
+                    } else if (type == LOC_REQUEST) {
                             cout << "LOC_REQUEST" << endl;
 
                             receiveNameAndArgType(len, message, name, argTypes);
 
                             // TODO: Find matching function, reply loc_success
 
-                            break;
-                        case TERMINATE:
+                    } else if (type == TERMINATE) {
                             cout << "TERMINATE" << endl;
 
                             // TODO: send termination msg to all servers
 
                             flag_terminate = true;
-                            break;
                     }
-
                     delete[] message;
                 }
             } // if

@@ -42,48 +42,34 @@ struct SkeletonData {
     ~SkeletonData();
 };
 
+struct FunctionData {
+    char name[64];
+    std::vector< argT* > argTv;
+    int num_argTv;
+
+    FunctionData(char *n, int *argTypes);
+    ~FunctionData();
+};
+
+struct ServerData {
+    char hostname[1024];
+    int port;
+    std::vector<FunctionData*> fns;
+    int num_fns;
+
+    ServerData(char* hn, int port);
+    ~ServerData();
+    bool functionInList(FunctionData* fdata);
+    void addFunctionToList(FunctionData* fdata);
+};
+
 void generateArgTvector(int *argTypes, std::vector< argT* > &v);
 
 bool sameName(char* n1, char* n2);
+bool sameServerName(char* n1, char* n2);
 
-// returns index of database that matches name and argTypes otherwise, return -1
-template<typename T> int matchingArgT(char* name, int *argTypes, T *database) {
-    std::vector< argT* > v;
-    std::cout << "Received name and argTypes:" << std::endl;
-    printf("name = %s\n", name);
-    generateArgTvector(argTypes, v);
-    int vsize = v.size();
-
-    // makes an entry in a local database, associating the server skeleton with
-    // name and list of argument types.
-    int localDatabaseSize = database->size();
-    int sameDataIndex = -1;
-
-    for (int i = 0; i < localDatabaseSize; ++i) {
-        // check if function name is same
-        if (!sameName(name, (*database)[i]->name)) continue; // move to next data
-
-        // check if number of arguments is same
-        if (vsize != (*database)[i]->num_argTv) continue; // move to next data
-
-        bool flag_sameArg = true;
-
-        // check if argument types are same
-        for (int j = 0; j < vsize; ++j) {
-            if (v[j]->type != ((*database)[i]->argTv)[j]->type ||
-                v[j]->array != ((*database)[i]->argTv)[j]->array) { // has different arg type
-                flag_sameArg = false;
-                break;
-            }
-        }
-        if (!flag_sameArg) continue; // move to next data
-
-        sameDataIndex = i;
-        break;
-    }
-
-    return sameDataIndex;
-}
+int matchingArgT(char* name, int *argTypes, std::vector<SkeletonData*> *database);
+int matchingArgT(char* name, std::vector<argT*> *argv, std::vector<FunctionData*> *database);
 
 //int getMessageSize(const char* name, int* argTypes, void**args); // execute, exe success
 //int getMessageSize(const char* name, int* argTypes); // loc request
