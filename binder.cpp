@@ -167,14 +167,18 @@ int main() {
                     char *server_identifier = new char[1024];
                     int port;
                     char *name = new char[64];
-                    int argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
-                    int *argTypes = new int[argTypeslen];
+//                    int argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
+//                    int *argTypes = new int[argTypeslen];
+                    int argTypeslen;
+                    int *argTypes;
                     int receiveResult;
                     int sameDataIndex;
 
                     switch(type) {
                         case REGISTER:
                             cout << "REGISTER" << endl;
+                            int argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
+                            int *argTypes = new int[argTypeslen];
 
                             receiveServerIdentifierAndPortAndNameAndArgType(len, message, server_identifier, port, name, argTypes);
 
@@ -200,15 +204,22 @@ int main() {
                                 }
                             }
 
+                            //TODO: Add the incoming function to local db. If there is a duplicated, return warning
+
                             //TODO: send reg sucess back
 
                             break;
                         case LOC_REQUEST:
                             cout << "LOC_REQUEST" << endl;
 
+                            argTypeslen = (len - 8 - 64) / 4;
+                            argTypes = new int[argTypeslen];
                             receiveNameAndArgType(len, message, name, argTypes);
+                            cout << "Name extracted: " << name << endl;
 
                             // TODO: Find matching function, reply loc_success
+
+                            // TODO: If cannot find matching function, or if the queue is empty, reply fail
 
                             break;
                         case TERMINATE:
