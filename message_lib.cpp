@@ -11,64 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include "string.h"
-
-argT::argT(bool input, bool output, int type, bool array)
-: input(input), output(output), type(type), array(array) {}
-
-SkeletonData::SkeletonData(char *n, int *argTypes, skeleton f) : f(f) {
-    memcpy(name, n, 64);
-    name[64] = '\0';
-    printf("SkeletonData::name = %s\n", name);
-
-    generateArgTvector(argTypes, argTv);
-    num_argTv = argTv.size();
-}
-
-SkeletonData::~SkeletonData() {
-    for (int i = 0; i < num_argTv; ++i) {
-        delete argTv[i];
-    }
-}
-
-FunctionData::FunctionData(char *n, int *argTypes) {
-    memcpy(name, n, 64);
-    name[64] = '\0';
-    printf("FunctionData::name = %s\n", name);
-
-    generateArgTvector(argTypes, argTv);
-    num_argTv = argTv.size();
-}
-
-FunctionData::~FunctionData() {
-    for (int i = 0; i < num_argTv; ++i) {
-        delete argTv[i];
-    }
-}
-
-ServerData::ServerData(char* hn, int port) : port(port) {
-    memcpy(hostname, hn, 1024);
-}
-
-ServerData::~ServerData() {
-    for (int i = 0; i < num_fns; ++i) {
-        delete fns[i];
-    }
-}
-
-bool ServerData::functionInList(FunctionData* fdata) {
-    for (int i = 0; i < num_fns; ++i) {
-        if (matchingArgT(fdata->name, &(fdata->argTv), &fns) != -1) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void ServerData::addFunctionToList(FunctionData* fdata) {
-    fns.push_back(fdata);
-    num_fns++;
-}
+#include <string.h>
 
 void generateArgTvector(int *argTypes, vector< argT* > &v) {
     for (int i = 0; ; ++i) {

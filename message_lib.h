@@ -6,6 +6,10 @@
 #define A03_MESSAGE_LIB_H
 
 #include "rpc.h"
+#include "argT.h"
+#include "skeletonData.h"
+#include "functionData.h"
+#include "serverData.h"
 #include <iostream>
 #include <vector>
 
@@ -21,46 +25,6 @@ enum MessageType {
     EXECUTE_SUCCESS = 8,
     EXECUTE_FAILURE = 9,
     TERMINATE = 10
-};
-
-struct argT {
-    bool input;
-    bool output;
-    int type;
-    bool array;
-
-    argT(bool input, bool output, int type, bool array);
-};
-
-struct SkeletonData {
-    char name[64];
-    skeleton f;
-    std::vector< argT* > argTv;
-    int num_argTv;
-
-    SkeletonData(char *n, int *argTypes, skeleton f);
-    ~SkeletonData();
-};
-
-struct FunctionData {
-    char name[64];
-    std::vector< argT* > argTv;
-    int num_argTv;
-
-    FunctionData(char *n, int *argTypes);
-    ~FunctionData();
-};
-
-struct ServerData {
-    char hostname[1024];
-    int port;
-    std::vector<FunctionData*> fns;
-    int num_fns;
-
-    ServerData(char* hn, int port);
-    ~ServerData();
-    bool functionInList(FunctionData* fdata);
-    void addFunctionToList(FunctionData* fdata);
 };
 
 void generateArgTvector(int *argTypes, std::vector< argT* > &v);

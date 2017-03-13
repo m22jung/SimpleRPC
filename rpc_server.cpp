@@ -110,7 +110,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 		return result;
 	}
 
-	int sameDataIndex = matchingArgT<vector<SkeletonData*>>(name, argTypes, &localDatabase);
+	int sameDataIndex = matchingArgT(name, argTypes, &localDatabase);
 	
 	if (sameDataIndex == -1) { // add new SkeletonData
 		cout << "\nFunction skeleton added:" << endl;
