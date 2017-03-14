@@ -78,8 +78,8 @@ bool sameServerName(char* n1, char* n2) {
 int matchingArgT(char* name, int *argTypes, std::vector<SkeletonData*> *database) {
     std::vector< argT* > v;
 
-    std::cout << "Received name and argTypes:" << std::endl;
-    printf("name = %s\n", name);
+    //std::cout << "Received name and argTypes:" << std::endl;
+    //printf("name = %s\n", name);
 
     generateArgTvector(argTypes, v);
     int vsize = v.size();
@@ -109,6 +109,9 @@ int matchingArgT(char* name, int *argTypes, std::vector<SkeletonData*> *database
         if (!flag_sameArg) continue; // move to next data
 
         sameDataIndex = i;
+        cout << "Function name=";
+        printf("%s, ", name);
+        cout << "matched at index=" << i << endl;
         break;
     }
 
@@ -116,8 +119,8 @@ int matchingArgT(char* name, int *argTypes, std::vector<SkeletonData*> *database
 }
 
 int matchingArgT(char* name, std::vector<argT*> *argv, std::vector<FunctionData*> *database) {
-    std::cout << "Received FunctionData:" << std::endl;
-    printf("name = %s\n", name);
+    //std::cout << "Received FunctionData:" << std::endl;
+    //printf("name = %s\n", name);
     
     int vsize = argv->size();
     int localDatabaseSize = database->size();
@@ -143,6 +146,9 @@ int matchingArgT(char* name, std::vector<argT*> *argv, std::vector<FunctionData*
         if (!flag_sameArg) continue; // move to next data
 
         sameDataIndex = i;
+        cout << "Function name=";
+        printf("%s, ", name);
+        cout << "matched at FunctionData index=" << i << endl;
         break;
     }
 

@@ -16,6 +16,7 @@ ServerData::~ServerData() {
 bool ServerData::functionInList(FunctionData* fdata) {
     for (int i = 0; i < num_fns; ++i) {
         if (matchingArgT(fdata->name, &(fdata->argTv), &fns) != -1) {
+            printf("on server=%s, port=%d\n", hostname, port);
             return true;
         }
     }
