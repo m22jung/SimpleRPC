@@ -256,7 +256,7 @@ void getMessage(int messageLength, MessageType msgType, char * message) {
 void getMessage(int messageLength, MessageType msgType, char * message, char * server_identifer, int port) {
     putMsglengthAndMsgType(messageLength, msgType, message);
 
-    memcpy(message, server_identifer, 1024);
+    memcpy(message + 8, server_identifer, 1024);
 
     message[1032] = (port >> 24) & 0xFF;
     message[1033] = (port >> 16) & 0xFF;

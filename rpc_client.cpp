@@ -44,7 +44,7 @@ int createServerSocket(char * addr, int port) {
     bcopy((char *)server->h_addr, (char *)&server_addr.sin_addr.s_addr, server->h_length);
     server_addr.sin_port = htons(port);
 
-    if (connect(binderSocket,(struct sockaddr *) &server_addr,sizeof(server_addr)) < 0) {
+    if (connect(serverSocket,(struct sockaddr *) &server_addr,sizeof(server_addr)) < 0) {
         cerr << "ERROR connecting" << endl;
         return -1;
     }
@@ -100,15 +100,6 @@ int createBinderSocket() {
 int sendLocationRequestMessage(char * name, int argTypes[]) {
 
     if (binderSocket < 0) { // // set up binder socket if not defined
-//        char * binderAddressString = getenv ("BINDER_ADDRESS");
-//        if(binderAddressString == NULL) {
-//            return BINDER_ADDR_NOT_FOUND;
-//        }
-//        char * binderPortString = getenv("BINDER_PORT");
-//        if (binderPortString == NULL) {
-//            return BINDER_PORT_NOT_FOUND;
-//        }
-
         int result = createBinderSocket();
 
         if (result < 0) {
@@ -191,6 +182,9 @@ int rpcCall(char* name, int* argTypes, void** args) {
             break;
     }
     delete [] message;
+
+    cout << "Received Server id = " << server_identifier << endl;
+    cout << "Received port = " << port << endl;
 
     //then send execute-req msg to the server
     int serverSocket = createServerSocket(server_identifier, port);
