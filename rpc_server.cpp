@@ -153,3 +153,56 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 
 	return result;
 }
+//int rpcExecute() {
+//
+//    bool running = true;
+//    // wait for the client call
+//    int msgLength, msgType;
+//
+//    if (sockfd_client < 0) {
+//        return SOCKET_NOT_SETUP;
+//    }
+//
+//    while (running) {
+//        // TODO: Also listen to the binder socket
+//        receiveLengthAndType(sockfd_client, msgLength, msgType);
+//
+//        char *message = new char[msgLength];
+//
+//        if (read(sockfd_client, message + 8, msgLength - 8) < 0) {
+//            cerr << "ERROR reading from socket" << endl;
+//            continue;
+//        }
+//
+//        char *name = new char[64];
+//        int argTypeslen;
+//        int *argTypes;
+//        void ** args;
+//
+//        switch(msgType) {
+//            case EXECUTE:
+//                // TODO: Create a new thread if new exec message received
+//                receiveNameAndArgTypeAndArgs(msgLength, message, name, argTypes, args);
+//
+//                int sameDataIndex = matchingArgT<vector<SkeletonData*>>(name, argTypes, &localDatabase);
+//
+//                if (sameDataIndex == -1) { // skeleton doesn't exist in this server. return error
+//                    sendExecFailureAfterFormatting(sockfd_client, FUNCTION_SKELETON_DOES_NOT_EXIST_IN_THIS_SERVER);
+//                } else {
+//                    localDatabase[sameDataIndex]->f(argTypes, args);
+//                    sendExecSuccessAfterFormatting(sockfd_client, name, argTypes, args);
+//                }
+//
+//                break;
+//            case TERMINATE:
+//                // TODO: In multithreading environment, close all running threads
+//                // TODO: verify that it came from the correct binder's ip addr / hostname
+//                running = false;
+//                break;
+//        }
+//    }
+//
+//
+//
+//    return 0;
+//}
