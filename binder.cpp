@@ -79,7 +79,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    vector<int> socket_connected; // list of sockets connected. servers stay connected whole time.
+    vector<pair<int, bool>> socket_connected; // list of sockets connected. servers stay connected whole time.
     vector<ServerData*> database; // database for serverData registered by servers
 
     while (!flag_terminate) { // for as many requests
@@ -91,7 +91,7 @@ int main() {
         cout << "socket_n: " << socket_n << endl;
 
         for (int i = 0; i < socket_n; ++i) { // set readfds
-            fd = socket_connected[i];
+            fd = socket_connected[i].first;
             if (fd > 0) FD_SET(fd, &readfds);
             if (fd > maxfd) maxfd = fd;
         }
@@ -106,12 +106,12 @@ int main() {
                 cerr << "ERROR on accept" << endl;
                 continue;
             }
-            socket_connected.push_back(newsockfd);
+            socket_connected.push_back(make_pair(newsockfd, false));
             continue;
         }
 
         for (int i = 0; i < socket_n; i++) { // Request
-            fd = socket_connected[i];
+            fd = socket_connected[i].first;
             if (FD_ISSET(fd, &readfds)) {
                 cout << "-READ- ";
 
@@ -145,6 +145,7 @@ int main() {
                             cout << "REGISTER" << endl;
                             argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
                             argTypes = new int[argTypeslen];
+                            socket_connected[i].second = true;
 
                             receiveServerIdentifierAndPortAndNameAndArgType(len, message, server_identifier, port, name, argTypes);
 
@@ -160,27 +161,22 @@ int main() {
                                 cout << "ServerData added" << endl;
                                 database.push_back(new ServerData(server_identifier, port));
                                 (database.back())->addFunctionToList(fdata);
-                                // TODO: send success message
                                 sendRegSuccessAfterFormatting(fd, REG_SUCCESS_NEW_SERVER);
                             } else {
                                 // check if FunctionData is in function list
                                 if (database[sameServerIndex]->functionInList(fdata)) {
                                     cout << "Same FunctionData exists in database" << endl;
                                     delete fdata;
-                                    // TODO: send fail message
                                     sendRegSuccessAfterFormatting(fd, REG_SAME_FUNCTION_EXIST);
                                 } else {
                                     cout << "non-existing FunctionData added to server: ";
                                     printf("%s port=%d\n", database[sameServerIndex]->hostname, database[sameServerIndex]->port);
                                     database[sameServerIndex]->addFunctionToList(fdata);
-                                    // TODO: send success message
                                     sendRegSuccessAfterFormatting(fd, REG_SUCCESS_EXISTING_SERVER);
                                 }
                             }
 
                             delete[]argTypes;
-
-                            //TODO: send reg sucess back
 
                     } else if (type == LOC_REQUEST) {
                         cout << "LOC_REQUEST" << endl;
@@ -188,8 +184,6 @@ int main() {
                         argTypes = new int[argTypeslen];
 
                         receiveNameAndArgType(len, message, name, argTypes);
-
-                        // TODO: Find matching function in round robin algo, reply loc_success
 
                         int originalIndex = databaseGlobalIndex;
                         bool searching = true;
@@ -200,7 +194,10 @@ int main() {
 
                             if (database[databaseGlobalIndex]->functionInList(searchingFunction)) {
                                 cout << "Databse instance found" << endl;
-                                sendLocSuccessAfterFormatting(fd, database[databaseGlobalIndex]->hostname, database[databaseGlobalIndex]->port);
+                                int logSuccessMsgResult = sendLocSuccessAfterFormatting(fd, database[databaseGlobalIndex]->hostname, database[databaseGlobalIndex]->port);
+                                if (logSuccessMsgResult < 0) {
+                                    cerr << "Sending Loc Success Msg Failed" << endl;
+                                }
                                 searching = false;
                             } else {
                                 cout << "Databse instance not found, iterate the pointer" << endl;
@@ -222,7 +219,9 @@ int main() {
                     } else if (type == TERMINATE) {
                         cout << "TERMINATE" << endl;
                             for (int index = 0; index < socket_n; index++) {
-                                sendTerminateAfterFormatting(socket_connected[index]);
+                                if (socket_connected[index].second) {
+                                    sendTerminateAfterFormatting(socket_connected[index].first);
+                                }
                             }
                             flag_terminate = true;
                     }

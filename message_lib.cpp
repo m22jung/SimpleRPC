@@ -524,3 +524,16 @@ void receiveReasonCode(int msgLength, char *message, int &reasonCode) {
                        (unsigned char)(message[11]) );
 
 }
+
+void receiveNameAndArgTypeAndArgs(int msgLength, char *message, char *name, int *argTypes, void **args) {
+    // extract name
+    memcpy(name, message + 8, 64);
+
+    // extract argType
+    int argTypesLength = (msgLength - 8 - 64 + 4) / 2;
+    memcpy(argTypes, message + 72, argTypesLength);
+
+    // extract args
+    int argsLength = argTypesLength - 1;
+    memcpy(args, message + 72 + argTypesLength, argsLength);
+}

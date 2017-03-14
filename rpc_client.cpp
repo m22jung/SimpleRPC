@@ -19,6 +19,7 @@ using namespace std;
 int binderSocket = -1;
 int serverSocket = -1;
 
+
 // LENGTH, TYPE, MESSAGE
 
 int createServerSocket(char * addr, int port) {
@@ -169,19 +170,22 @@ int rpcCall(char* name, int* argTypes, void** args) {
 
     char *server_identifier = new char[1024];
     int port;
+    int reasonCode = 0;
     switch(msgType) {
         case LOC_SUCCESS:
             receiveServerIdentifierAndPort(length, message, server_identifier, port);
             // extract server_identifer, port
             break;
         case LOC_FAILURE:
-            int reasonCode = 0;
+            reasonCode = 0;
             receiveReasonCode(length, message, reasonCode);
-            return reasonCode;
             // extract reason code,return it
-            break;
     }
     delete [] message;
+
+    if (reasonCode != 0) {
+        return reasonCode;
+    }
 
     cout << "Received Server id = " << server_identifier << endl;
     cout << "Received port = " << port << endl;
@@ -196,7 +200,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
     int responseFromServer = sendExecuteRequestMessage(serverSocket, name, argTypes, args);
 
     //TODO: Handle response from the server
-    extractLengthAndTypeResult = receiveLengthAndType(binderSocket, length, msgType);
+    extractLengthAndTypeResult = receiveLengthAndType(serverSocket, length, msgType);
 
     if (extractLengthAndTypeResult < 0) {
         // error
@@ -204,12 +208,24 @@ int rpcCall(char* name, int* argTypes, void** args) {
     }
 
     message = new char[length];
-    if (read(binderSocket, message + 8, length - 8) < 0) {
+    if (read(serverSocket, message + 8, length - 8) < 0) {
         return READING_SOCKET_ERROR;
     }
-//    receiveNameAndArgTypeAndArgs(length, message, name, argTypes, args); // potential bug source
+    switch(msgType) {
+        case REGISTER_SUCCESS:
+            receiveNameAndArgTypeAndArgs(length, message, name, argTypes, args);
+            break;
+        case REGISTER_FAILURE:
+            receiveReasonCode(length, message, reasonCode);
+            break;
+    }
+    delete [] message;
 
     close(serverSocket);
+
+    if (reasonCode != 0) {
+        return reasonCode;
+    }
 
     return responseFromServer;
 
