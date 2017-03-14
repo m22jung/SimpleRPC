@@ -110,17 +110,46 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 		return result;
 	}
 
-	int sameDataIndex = matchingArgT(name, argTypes, &localDatabase);
-	
-	if (sameDataIndex == -1) { // add new SkeletonData
-		cout << "\nFunction skeleton added:" << endl;
-		localDatabase.push_back(new SkeletonData(name, argTypes, f));
-	} else { // replace function skeleton
-		cout << "\nSame function added (replace function skeleton)" << endl;
-		localDatabase[sameDataIndex]->f = f;
-	}
-	cout << endl;
-	// don't forget to delete local database on termination
+	char *message = new char[12];
+	int valread = read(sockfd_binder, message, 12);
+	int msgType, returnCode;
+
+    if (valread == 0) {
+        return SOCKET_CONNECTION_FINISHED;
+    } else if (valread < 0) {
+        cerr << "ERROR reading from socket" << endl;
+        return READING_SOCKET_ERROR;
+
+    } else { // read
+        msgType = (int)((unsigned char)(message[4]) << 24 |
+                         (unsigned char)(message[5]) << 16 |
+                         (unsigned char)(message[6]) << 8 |
+                         (unsigned char)(message[7]) );
+
+        returnCode = (int)((unsigned char)(message[8]) << 24 |
+                         (unsigned char)(message[9]) << 16 |
+                         (unsigned char)(message[10]) << 8 |
+                         (unsigned char)(message[11]) );
+    }
+
+    if (msgType == REGISTER_SUCCESS) {
+    	cout << "REGISTER_SUCCESS received, returnCode=" << returnCode << endl;
+
+    	int sameDataIndex = matchingArgT(name, argTypes, &localDatabase);
+		
+		if (sameDataIndex == -1) { // add new SkeletonData
+			cout << "\nFunction skeleton added:" << endl;
+			localDatabase.push_back(new SkeletonData(name, argTypes, f));
+		} else { // replace function skeleton
+			cout << "\nSame function added (replace function skeleton)" << endl;
+			localDatabase[sameDataIndex]->f = f;
+		}
+		cout << endl;
+		// don't forget to delete local database on termination
+
+    } else {
+    	cout << "####REGISTER_FAILURE#### returnCode=" << returnCode << endl; 
+    }
 
 	return result;
 }

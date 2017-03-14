@@ -161,20 +161,20 @@ int main() {
                                 database.push_back(new ServerData(server_identifier, port));
                                 (database.back())->addFunctionToList(fdata);
                                 // TODO: send success message
-                                sendRegSuccessAfterFormatting(fd, REG_SUCCESS);
+                                sendRegSuccessAfterFormatting(fd, REG_SUCCESS_NEW_SERVER);
                             } else {
                                 // check if FunctionData is in function list
                                 if (database[sameServerIndex]->functionInList(fdata)) {
                                     cout << "Same FunctionData exists in database" << endl;
                                     delete fdata;
                                     // TODO: send fail message
-                                    sendRegSuccessAfterFormatting(fd, REG_FAILURE);
+                                    sendRegSuccessAfterFormatting(fd, REG_SAME_FUNCTION_EXIST);
                                 } else {
                                     cout << "non-existing FunctionData added to server: ";
                                     printf("%s port=%d\n", database[sameServerIndex]->hostname, database[sameServerIndex]->port);
                                     database[sameServerIndex]->addFunctionToList(fdata);
                                     // TODO: send success message
-                                    sendRegSuccessAfterFormatting(fd, REG_SUCCESS);
+                                    sendRegSuccessAfterFormatting(fd, REG_SUCCESS_EXISTING_SERVER);
                                 }
                             }
 
@@ -212,7 +212,7 @@ int main() {
 
                                 if (databaseGlobalIndex == originalIndex) { // fail function doesn't exist
                                     cout << "one full loop done" << endl;
-                                    sendLocFailureAfterFormatting(fd, FUNCTION_LOCATION_DOES_NOT_EXIT);
+                                    sendLocFailureAfterFormatting(fd, FUNCTION_LOCATION_DOES_NOT_EXIST);
                                     searching = false;
                                 }
                             }
