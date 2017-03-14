@@ -174,7 +174,7 @@ int getMessageSize(const char * name, int * argTypes) {
 
 int getMessageSize(char * server_identifer, int port, const char* name, int* argTypes) {
     int server_identifier_Length = 1024;
-    int portLength = sizeof(port);
+    int portLength = 4;
     int nameLength = 64;
 
     int argTypesLength = 0;
@@ -186,7 +186,7 @@ int getMessageSize(char * server_identifer, int port, const char* name, int* arg
 
 int getMessageSize(char * server_identifer, int port) {
     int server_identifier_Length = 1024;
-    int portLength = sizeof(port);
+    int portLength = 4;
 
     return server_identifier_Length + portLength;
 }
@@ -225,7 +225,10 @@ void getMessage(unsigned int messageLength, MessageType msgType, char * message,
 
     memcpy(message + 8, name, 64);
 
-    memcpy(message + 72, argTypes, sizeof(argTypes));
+    int argTypesLength = 0;
+    while (argTypes[argTypesLength++]);
+    int argTypesSize = argTypesLength * 4;
+    memcpy(message + 72, argTypes, argTypesSize);
 }
 void getMessage(int messageLength, MessageType msgType, char * message, char * server_identifier, int port, const char* name, int* argTypes) {
     putMsglengthAndMsgType(messageLength, msgType, message);
@@ -470,7 +473,7 @@ void receiveNameAndArgType(int msgLength, char *message, char *name, int *argTyp
     // extract name
     memcpy(name, message + 8, 64);
 
-    // extract server_identifier
+    // extract argType
     int argTypesLength = msgLength - 8 - 64;
     memcpy(argTypes, message + 72, argTypesLength);
 
