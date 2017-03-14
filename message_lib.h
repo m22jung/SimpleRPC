@@ -61,6 +61,7 @@ int sendTerminateAfterFormatting(int socket);
 int receiveLengthAndType(int socket, int &length, int &msgType);
 void receiveServerIdentifierAndPortAndNameAndArgType(int msgLength, char * message, char * server_identifier, int &port, char * name, int * argTypes);
 void receiveNameAndArgType(int msgLength, char * message, char * name, int * argTypes);
+int receiveRegisterResult(int socket, int &msgType, int &reasonCode);
 void receiveServerIdentifierAndPort(int msgLength, char * message, char * server_identifier, int &port);
 void receiveReasonCode(int msgLength, char * message, int &reasonCode);
 void receiveNameAndArgTypeAndArgs(int msgLength, char * message, char * name, int * argTypes, void** args);

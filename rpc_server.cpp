@@ -106,30 +106,15 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 	int result = sendRegRequestAfterFormatting(sockfd_binder, SERVER_ADDRESS, port, name, argTypes);
 	cout << "rpcRegister Request result = " << result << endl;
 	if (result < 0) {
-		cout << "negative result" << endl;
+		cout << "negative result on resgister request" << endl;
 		return result;
 	}
 
-	char *message = new char[12];
-	int valread = read(sockfd_binder, message, 12);
 	int msgType, returnCode;
-
-    if (valread == 0) {
-        return SOCKET_CONNECTION_FINISHED;
-    } else if (valread < 0) {
-        cerr << "ERROR reading from socket" << endl;
-        return READING_SOCKET_ERROR;
-
-    } else { // read
-        msgType = (int)((unsigned char)(message[4]) << 24 |
-                         (unsigned char)(message[5]) << 16 |
-                         (unsigned char)(message[6]) << 8 |
-                         (unsigned char)(message[7]) );
-
-        returnCode = (int)((unsigned char)(message[8]) << 24 |
-                         (unsigned char)(message[9]) << 16 |
-                         (unsigned char)(message[10]) << 8 |
-                         (unsigned char)(message[11]) );
+    result = receiveRegisterResult(sockfd_binder, msgType, returnCode);
+    if (result < 0) {
+        cout << "negative result on receive register result" << endl;
+        return result;
     }
 
     if (msgType == REGISTER_SUCCESS) {

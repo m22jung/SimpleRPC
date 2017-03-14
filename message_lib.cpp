@@ -447,6 +447,30 @@ int receiveLengthAndType(int socket, int &length, int &msgType) {
     return 0;
 }
 
+int receiveRegisterResult(int socket, int &msgType, int &reasonCode) {
+    char buffer[12];
+    int valread = read(socket, buffer, 12);
+
+    if (valread == 0) {
+        return SOCKET_CONNECTION_FINISHED;
+    } else if (valread < 0) {
+        cerr << "ERROR reading from socket" << endl;
+        return READING_SOCKET_ERROR;
+
+    } else { // read
+        msgType = (int)((unsigned char)(buffer[4]) << 24 |
+                         (unsigned char)(buffer[5]) << 16 |
+                         (unsigned char)(buffer[6]) << 8 |
+                         (unsigned char)(buffer[7]) );
+
+        reasonCode = (int)((unsigned char)(buffer[8]) << 24 |
+                         (unsigned char)(buffer[9]) << 16 |
+                         (unsigned char)(buffer[10]) << 8 |
+                         (unsigned char)(buffer[11]) );
+    }
+    return 0;
+}
+
 void receiveServerIdentifierAndPortAndNameAndArgType(int msgLength, char *message, char *server_identifier, int &port,
                                                     char *name, int *argTypes) {
 
