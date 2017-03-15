@@ -99,8 +99,12 @@ int matchingArgT(char* name, int *argTypes, std::vector<SkeletonData*> *database
 
         // check if argument types are same
         for (int j = 0; j < vsize; ++j) {
-            if (v[j]->type != ((*database)[i]->argTv)[j]->type ||
-                v[j]->array != ((*database)[i]->argTv)[j]->array) { // has different arg type
+            if (v[j]->type != ((*database)[i]->argTv)[j]->type) { // has different type
+                flag_sameArg = false;
+                break;
+            }
+            if (!((v[j]->arraysize == 0 && ((*database)[i]->argTv)[j]->arraysize == 0) ||
+                (v[j]->arraysize != 0 && ((*database)[i]->argTv)[j]->arraysize != 0))) { // same type but different array size
                 flag_sameArg = false;
                 break;
             }
@@ -136,8 +140,12 @@ int matchingArgT(char* name, std::vector<argT*> *argv, std::vector<FunctionData*
 
         // check if argument types are same
         for (int j = 0; j < vsize; ++j) {
-            if ((*argv)[j]->type != ((*database)[i]->argTv)[j]->type ||
-                (*argv)[j]->array != ((*database)[i]->argTv)[j]->array) { // has different arg type
+            if ((*argv)[j]->type != ((*database)[i]->argTv)[j]->type) { // has different type
+                flag_sameArg = false;
+                break;
+            }
+            if (!(((*argv)[j]->arraysize == 0 && ((*database)[i]->argTv)[j]->arraysize == 0) ||
+                ((*argv)[j]->arraysize != 0 && ((*database)[i]->argTv)[j]->arraysize != 0))) { // same type but different array size
                 flag_sameArg = false;
                 break;
             }
