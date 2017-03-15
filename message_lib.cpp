@@ -202,17 +202,34 @@ int getMessageSize(int reasonCode) {
     return sizeof(reasonCode); // Just an int
 }
 
+void put4byteToCharArray(char *dest, int value) {
+    char *ptr = (char*)(&value);
+
+    dest[3] = *ptr;
+    dest[2] = *(++ptr);
+    dest[1] = *(++ptr);
+    dest[0] = *(++ptr);
+    // dest[0] = (value >> 24) & 0xFF;
+    // dest[1] = (value >> 16) & 0xFF;
+    // dest[2] = (value >> 8) & 0xFF;
+    // dest[3] = value & 0xFF;
+}
+
+void get4byteFromCharArray(int *dest, char *from) {
+    *dest = (int)((unsigned char)(from[0]) << 24 |
+                (unsigned char)(from[1]) << 16 |
+                (unsigned char)(from[2]) << 8 |
+                (unsigned char)(from[3]) );
+}
+
+double dbl = 2222;
+char* ptr = (char*)(&dbl);
+
 void putMsglengthAndMsgType(int messageLength, MessageType msgType, char * message) {
-    message[0] = (messageLength >> 24) & 0xFF;
-    message[1] = (messageLength >> 16) & 0xFF;
-    message[2] = (messageLength >> 8) & 0xFF;
-    message[3] = messageLength & 0xFF;
+    put4byteToCharArray(message, messageLength);
 
     int msgType_int = static_cast<int>(msgType);
-    message[4] = (msgType_int >> 24) & 0xFF;
-    message[5] = (msgType_int >> 16) & 0xFF;
-    message[6] = (msgType_int >> 8) & 0xFF;
-    message[7] = msgType_int & 0xFF;
+    put4byteToCharArray(message+4, msgType_int);
 }
 
 void getMessage(int messageLength, MessageType msgType, char * message, const char* name, int* argTypes, void**args) {
@@ -242,10 +259,7 @@ void getMessage(int messageLength, MessageType msgType, char * message, char * s
 
     memcpy(message + 8, server_identifier, 1024);
 
-    message[1032] = (port >> 24) & 0xFF;
-    message[1033] = (port >> 16) & 0xFF;
-    message[1034] = (port >> 8) & 0xFF;
-    message[1035] = port & 0xFF;
+    put4byteToCharArray(message+1032, port);
 
     memcpy(message + 1036, name, 64);
 
@@ -265,19 +279,13 @@ void getMessage(int messageLength, MessageType msgType, char * message, char * s
 
     memcpy(message + 8, server_identifer, 1024);
 
-    message[1032] = (port >> 24) & 0xFF;
-    message[1033] = (port >> 16) & 0xFF;
-    message[1034] = (port >> 8) & 0xFF;
-    message[1035] = port & 0xFF;
+    put4byteToCharArray(message+1032, port);
 }
 
 void getMessage(int messageLength, MessageType msgType, char * message, int reasonCode) {
     putMsglengthAndMsgType(messageLength, msgType, message);
 
-    message[8] = (reasonCode >> 24) & 0xFF;
-    message[9] = (reasonCode >> 16) & 0xFF;
-    message[10] = (reasonCode >> 8) & 0xFF;
-    message[11] = reasonCode & 0xFF;
+    put4byteToCharArray(message+8, reasonCode);
 }
 
 int sendRegRequestAfterFormatting(int socket, char * server_identifier, int port, char * name, int * argTypes) {
@@ -442,15 +450,8 @@ int receiveLengthAndType(int socket, int &length, int &msgType) {
         return READING_SOCKET_ERROR;
 
     } else { // read
-        length = (int)((unsigned char)(buffer[0]) << 24 |
-                        (unsigned char)(buffer[1]) << 16 |
-                        (unsigned char)(buffer[2]) << 8 |
-                        (unsigned char)(buffer[3]) );
-
-        msgType = (int)((unsigned char)(buffer[4]) << 24 |
-                         (unsigned char)(buffer[5]) << 16 |
-                         (unsigned char)(buffer[6]) << 8 |
-                         (unsigned char)(buffer[7]) );
+        get4byteFromCharArray(&length, buffer);
+        get4byteFromCharArray(&msgType, buffer+4);
     }
     return 0;
 }
@@ -466,15 +467,8 @@ int receiveRegisterResult(int socket, int &msgType, int &reasonCode) {
         return READING_SOCKET_ERROR;
 
     } else { // read
-        msgType = (int)((unsigned char)(buffer[4]) << 24 |
-                         (unsigned char)(buffer[5]) << 16 |
-                         (unsigned char)(buffer[6]) << 8 |
-                         (unsigned char)(buffer[7]) );
-
-        reasonCode = (int)((unsigned char)(buffer[8]) << 24 |
-                         (unsigned char)(buffer[9]) << 16 |
-                         (unsigned char)(buffer[10]) << 8 |
-                         (unsigned char)(buffer[11]) );
+        get4byteFromCharArray(&msgType, buffer+4);
+        get4byteFromCharArray(&reasonCode, buffer+8);
     }
     return 0;
 }
@@ -486,10 +480,7 @@ void receiveServerIdentifierAndPortAndNameAndArgType(int msgLength, char *messag
     memcpy(server_identifier, message + 8, 1024);
 
     // extract port
-    port = (int)((unsigned char)(message[1032]) << 24 |
-                 (unsigned char)(message[1033]) << 16 |
-                 (unsigned char)(message[1034]) << 8 |
-                 (unsigned char)(message[1035]) );
+    get4byteFromCharArray(&port, message+1032);
 
     // extract name
     memcpy(name, message + 1036, 64);
@@ -517,19 +508,13 @@ void receiveServerIdentifierAndPort(int msgLength, char *message, char *server_i
     memcpy(server_identifier, message + 8, 1024);
 
     //extract port
-    port = (int)((unsigned char)(message[1032]) << 24 |
-                 (unsigned char)(message[1033]) << 16 |
-                 (unsigned char)(message[1034]) << 8 |
-                 (unsigned char)(message[1035]) );
+    get4byteFromCharArray(&port, message+1032);
 
 }
 
 void receiveReasonCode(int msgLength, char *message, int &reasonCode) {
     //extract reasonCode
-    reasonCode = (int)((unsigned char)(message[8]) << 24 |
-                       (unsigned char)(message[9]) << 16 |
-                       (unsigned char)(message[10]) << 8 |
-                       (unsigned char)(message[11]) );
+    get4byteFromCharArray(&reasonCode, message+8);
 
 }
 
