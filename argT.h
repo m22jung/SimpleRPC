@@ -5,9 +5,9 @@ struct argT {
     bool input;
     bool output;
     int type;
-    bool array;
+    int arraysize;
 
-    argT(bool input, bool output, int type, bool array);
+    argT(bool input, bool output, int type, int arraysize);
 };
 
 #endif

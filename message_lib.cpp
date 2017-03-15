@@ -17,8 +17,8 @@ void generateArgTvector(int *argTypes, vector< argT* > &v) {
     for (int i = 0; ; ++i) {
         if (argTypes[i] == 0) break; // end of argTypes
 
-        bool input, output, array;
-        int type;
+        bool input, output;
+        int type, arraysize;
 
         int io = (argTypes[i] >> ARG_OUTPUT) & 0x00000003;
         cout << "int io=" << io;
@@ -40,11 +40,10 @@ void generateArgTvector(int *argTypes, vector< argT* > &v) {
         type = (argTypes[i] >> 16) & 0x00000006;
         cout << " type=" << type;
 
-        int arraysize = argTypes[i] & 0x0000FFFF;
+        arraysize = argTypes[i] & 0x0000FFFF;
         cout << " arraysize=" << arraysize << endl;
-        if (arraysize != 0) array = true;
 
-        v.push_back(new argT(input, output, type, array));
+        v.push_back(new argT(input, output, type, arraysize));
     }
 }
 
