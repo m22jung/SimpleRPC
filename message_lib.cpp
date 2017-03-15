@@ -216,10 +216,18 @@ void put4byteToCharArray(char *dest, int value) {
 }
 
 void get4byteFromCharArray(int *dest, char *from) {
-    *dest = (int)((unsigned char)(from[0]) << 24 |
-                (unsigned char)(from[1]) << 16 |
-                (unsigned char)(from[2]) << 8 |
-                (unsigned char)(from[3]) );
+    char *ptr = (char*)(dest);
+
+    ptr[3] = *from;
+    ptr[2] = *(++from);
+    ptr[1] = *(++from);
+    ptr[0] = *(++from);
+
+    *dest = *((int*)ptr);
+    // *dest = (int)((unsigned char)(from[0]) << 24 |
+    //             (unsigned char)(from[1]) << 16 |
+    //             (unsigned char)(from[2]) << 8 |
+    //             (unsigned char)(from[3]) );
 }
 
 double dbl = 2222;
