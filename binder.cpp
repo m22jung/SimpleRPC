@@ -74,7 +74,7 @@ int main() {
 
     setup(&sockfd, &address); // opens and binds socket, prints address and port number
 
-    if (listen(sockfd, 5) < 0) {
+    if (listen(sockfd, SOMAXCONN) < 0) {
         cerr << "ERROR on listen" << endl;
         exit(EXIT_FAILURE);
     }

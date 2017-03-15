@@ -50,7 +50,7 @@ int createServerSocket(char * addr, int port) {
         return -1;
     }
 
-    return 0;
+    return serverSocket;
 }
 
 int createBinderSocket() {
@@ -192,15 +192,22 @@ int rpcCall(char* name, int* argTypes, void** args) {
 
     //then send execute-req msg to the server
     int serverSocket = createServerSocket(server_identifier, port);
+    cout << "Server socket created" << endl;
 
     if (serverSocket < 0) {
         return SERVER_SOCKET_NOT_SETUP;
     }
 
-    int responseFromServer = sendExecuteRequestMessage(serverSocket, name, argTypes, args);
+    int sendresult = sendExecuteRequestMessage(serverSocket, name, argTypes, args);
+    if (sendresult < 0) {
+        cout << "send failed DATA_SEND_FAILED" << endl;
+        return sendresult;
+    }
+    cout << "Message sent to server" << endl;
 
     //TODO: Handle response from the server
     extractLengthAndTypeResult = receiveLengthAndType(serverSocket, length, msgType);
+    cout << "Message received from server" << endl;
 
     if (extractLengthAndTypeResult < 0) {
         // error
@@ -227,7 +234,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
         return reasonCode;
     }
 
-    return responseFromServer;
+    return sendresult;
 
 }
 

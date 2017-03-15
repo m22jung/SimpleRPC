@@ -21,7 +21,7 @@ void generateArgTvector(int *argTypes, vector< argT* > &v) {
         int type;
 
         int io = (argTypes[i] >> ARG_OUTPUT) & 0x00000003;
-        //cout << "int io=" << io;
+        cout << "int io=" << io;
         switch (io) {
             case 3:
                 input = true;
@@ -38,10 +38,10 @@ void generateArgTvector(int *argTypes, vector< argT* > &v) {
         }
 
         type = (argTypes[i] >> 16) & 0x00000006;
-        //cout << " type=" << type;
+        cout << " type=" << type;
 
         int arraysize = argTypes[i] & 0x0000FFFF;
-        //cout << " arraysize=" << arraysize << endl;
+        cout << " arraysize=" << arraysize << endl;
         if (arraysize != 0) array = true;
 
         v.push_back(new argT(input, output, type, array));
@@ -218,7 +218,7 @@ void getMessage(int messageLength, MessageType msgType, char * message, const ch
     int argTypesSize = argTypesLength * 4;
     memcpy(message + 72, argTypes, argTypesSize);
 
-    memcpy(message + argTypesSize, args, argTypesSize - 4);
+    memcpy(message + 72 + argTypesSize, args, argTypesSize - 4);
 }
 void getMessage(unsigned int messageLength, MessageType msgType, char * message, const char* name, int* argTypes) {
     putMsglengthAndMsgType(messageLength, msgType, message);
@@ -366,6 +366,7 @@ int sendLocFailureAfterFormatting(int socket, int reasonCode) {
 int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void** args) {
     int msgSize = getMessageSize(name, argTypes, args);
     msgSize += 8;
+    cout << "send Msg size = " << msgSize << endl;
     char msg[msgSize];
     getMessage(msgSize, EXECUTE, msg, name, argTypes, args);
 
@@ -534,6 +535,6 @@ void receiveNameAndArgTypeAndArgs(int msgLength, char *message, char *name, int 
     memcpy(argTypes, message + 72, argTypesLength);
 
     // extract args
-    int argsLength = argTypesLength - 1;
+    int argsLength = argTypesLength - 4;
     memcpy(args, message + 72 + argTypesLength, argsLength);
 }
