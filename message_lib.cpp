@@ -230,9 +230,6 @@ void get4byteFromCharArray(int *dest, char *from) {
     //             (unsigned char)(from[3]) );
 }
 
-double dbl = 2222;
-char* ptr = (char*)(&dbl);
-
 void putMsglengthAndMsgType(int messageLength, MessageType msgType, char * message) {
     put4byteToCharArray(message, messageLength);
 
@@ -387,12 +384,152 @@ int sendLocFailureAfterFormatting(int socket, int reasonCode) {
 }
 
 int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void** args) {
-    int msgSize = getMessageSize(name, argTypes, args);
-    msgSize += 8;
-    cout << "send Msg size = " << msgSize << endl;
-    char msg[msgSize];
-    getMessage(msgSize, EXECUTE, msg, name, argTypes, args);
+    std::vector< argT* > argTypeVector;
 
+    generateArgTvector(argTypes, argTypeVector);
+
+    int argTypesLength = argTypeVector.size() + 1;
+
+    // Calculate msgSize
+    int msgSize = 0;
+
+    for (int i = 0; i < argTypeVector.size(); i++) {
+        if (argTypeVector[i]->arraysize == 0) {
+            msgSize++;
+        } else {
+            msgSize += argTypeVector[i]->arraysize;
+        }
+    }
+
+    msgSize += 2; // Length and MsgType
+    msgSize += argTypesLength; // ArgTypes
+    msgSize = msgSize * 4;
+    msgSize += 64; // Name
+    cout << "msg Size from client before sending is " << msgSize << endl;
+
+
+    char msg[msgSize + 8];
+    putMsglengthAndMsgType(msgSize, EXECUTE, msg);
+
+    memcpy(msg + 8, name, 64);
+
+
+    int argTypesSize = argTypesLength * 4;
+    memcpy(msg + 72, argTypes, argTypesSize);
+
+    char * msgPointer = msg + 8 + 64 + argTypesLength;
+
+    for (int i = 0; i < argTypesLength - 1; i++) {
+        argT * argType = argTypeVector[i];
+
+        void * singleArgument = args[i];
+
+        char * chars;
+        short * shorts;
+        int * ints;
+        long * longs;
+        double * doubles;
+        float * floats;
+
+        switch (argType->type) {
+            case ARG_CHAR:
+                chars = (char *)singleArgument;
+                if (argType->arraysize == 0) {
+                    *msgPointer = chars[0];
+                    msgPointer += 1;
+                }
+                else {
+                    for(int j = 0; j < argType->arraysize; j++) {
+                        *msgPointer = chars[j];
+                        msgPointer += 1;
+                    }
+                }
+                break;
+            case ARG_SHORT: // 2 byte
+                shorts = (short *)singleArgument;
+                if (argType->arraysize == 0) {
+                    msgPointer[0] = (*shorts >> 8) & 0xFF;
+                    msgPointer[1] = *shorts & 0xFF;
+                    msgPointer += 2;
+                } else {
+                    for (int j = 0; j < argType->arraysize; j++) {
+                        msgPointer[0] = (shorts[j] >> 8) & 0xFF;
+                        msgPointer[1] = shorts[j] & 0xFF;
+                        msgPointer += 2;
+                    }
+                }
+                break;
+            case ARG_INT: // 4byte
+                ints = (int *)singleArgument;
+                if (argType->arraysize == 0) {
+                    msgPointer[0] = (*ints >> 24) & 0xFF;
+                    msgPointer[1] = (*ints >> 16) & 0xFF;
+                    msgPointer[2] = (*ints >> 8) & 0xFF;
+                    msgPointer[3] = *ints & 0xFF;
+                    msgPointer += 4;
+                } else {
+                    for (int j = 0; j < argType->arraysize; j++) {
+                        msgPointer[0] = (ints[j] >> 24) & 0xFF;
+                        msgPointer[1] = (ints[j] >> 16) & 0xFF;
+                        msgPointer[2] = (ints[j] >> 8) & 0xFF;
+                        msgPointer[3] = ints[j] & 0xFF;
+                        msgPointer += 4;
+                    }
+                }
+                break;
+            case ARG_LONG: // 4 byte
+                longs = (long *)singleArgument;
+                if (argType->arraysize == 0) {
+                    msgPointer[0] = (*longs >> 24) & 0xFF;
+                    msgPointer[1] = (*longs >> 16) & 0xFF;
+                    msgPointer[2] = (*longs >> 8) & 0xFF;
+                    msgPointer[3] = *longs & 0xFF;
+                    msgPointer += 4;
+                } else {
+                    for (int j = 0; j < argType->arraysize; j++) {
+                        msgPointer[0] = (longs[j] >> 24) & 0xFF;
+                        msgPointer[1] = (longs[j] >> 16) & 0xFF;
+                        msgPointer[2] = (longs[j] >> 8) & 0xFF;
+                        msgPointer[3] = longs[j] & 0xFF;
+                        msgPointer += 4;
+                    }
+                }
+                break;
+            case ARG_DOUBLE: // 8byte
+                doubles = (double *)singleArgument;
+                if (argType->arraysize == 0) {
+
+                    msgPointer = (char*)(doubles);
+                    msgPointer += 8;
+                } else {
+                    for (int j = 0; j < argType->arraysize; j++) {
+                        msgPointer = (char*)(&doubles[j]);
+                        msgPointer += 8;
+                    }
+                }
+                break;
+            case ARG_FLOAT: // 4 byte
+                floats = (float *)singleArgument;
+                if (argType->arraysize == 0) {
+                    msgPointer = (char*)(floats);
+                    msgPointer += 4;
+                } else {
+                    for (int j = 0; j < argType->arraysize; j++) {
+                        msgPointer = (char*)(&floats[j]);
+                        msgPointer += 4;
+                    }
+                }
+                break;
+        }
+
+    }
+
+//    int msgSize = getMessageSize(name, argTypes, args);
+//    msgSize += 8;
+//    cout << "send Msg size = " << msgSize << endl;
+//    char msg[msgSize];
+//    getMessage(msgSize, EXECUTE, msg, name, argTypes, args);
+//
     int sentData = send(socket, msg, msgSize, 0);
 
     if (sentData == -1) {

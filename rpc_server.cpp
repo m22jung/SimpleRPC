@@ -202,6 +202,8 @@ int rpcExecute() {
 
         receiveNameAndArgTypeAndArgs(msgLength, message, name, argTypes, args);
 
+        cout << "DEBUG:::: Length is " << msgLength << endl;
+
         int sameDataIndex = matchingArgT(name, argTypes, &localDatabase); // search database
 
         if (sameDataIndex == -1) { // skeleton doesn't exist in this server. return error
