@@ -441,7 +441,221 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
 
     char * msgPointer = msg + 8 + 64 + (argTypesLength * 4);
 
+    marshallData(msgPointer, argTypes, args, argTypesLength);
+
+    int sentData = send(socket, msg, msgSize, 0);
+
+    if (sentData == -1) {
+        return DATA_SEND_FAILED;
+    }
+
+    return sentData;
+}
+
+int sendExecSuccessAfterFormatting(int socket, char *name, int *argTypes, void **args) {
+    std::vector< argT* > argTypeVector;
+
+    generateArgTvector(argTypes, argTypeVector);
+
+    int argTypesLength = argTypeVector.size() + 1;
+    int argTypesSize = argTypesLength * 4;
+
+    // Calculate msgSize
+    int msgSize = 0;
+    msgSize += 8; // Length and MsgType
+    msgSize += argTypesSize; // ArgTypes
+    msgSize += 64; // Name
+
+    for (int i = 0; i < argTypeVector.size(); i++) {
+        if (argTypeVector[i]->arraysize == 0) {
+            switch (argTypeVector[i]->type) {
+                case ARG_CHAR:
+                    msgSize += 1; break;
+                case ARG_SHORT:
+                    msgSize += 2; break;
+                case ARG_INT:
+                    msgSize += 4; break;
+                case ARG_LONG:
+                    msgSize += 4; break;
+                case ARG_DOUBLE:
+                    msgSize += 8; break;
+                case ARG_FLOAT:
+                    msgSize += 4; break;
+            }
+        } else {
+            switch (argTypeVector[i]->type) {
+                case ARG_CHAR:
+                    msgSize += (argTypeVector[i]->arraysize * 1); break;
+                case ARG_SHORT:
+                    msgSize += (argTypeVector[i]->arraysize * 2); break;
+                case ARG_INT:
+                    msgSize += (argTypeVector[i]->arraysize * 4); break;
+                case ARG_LONG:
+                    msgSize += (argTypeVector[i]->arraysize * 4); break;
+                case ARG_DOUBLE:
+                    msgSize += (argTypeVector[i]->arraysize * 8); break;
+                case ARG_FLOAT:
+                    msgSize += (argTypeVector[i]->arraysize * 4); break;
+            }
+        }
+    }
+    cout << "msg Size from client before sending is " << msgSize << endl;
+
+    char msg[msgSize];
+    putMsglengthAndMsgType(msgSize, EXECUTE_SUCCESS, msg);
+
+    memcpy(msg + 8, name, 64);
+
+    cout << "argTypesSize=" << argTypesSize << endl;
+    memcpy(msg + 72, argTypes, argTypesSize);
+
+    int argTypeslen = 72;
+    for (;;) {
+        int temp;
+        get4byteFromCharArray(&temp, msg + argTypeslen);
+        cout << "pointer=" << argTypeslen << " temp=" << temp << endl;
+        argTypeslen += 4;
+        if (temp == 0) break;
+    }
+
+    char * msgPointer = msg + 8 + 64 + (argTypesLength * 4);
+
+    marshallData(msgPointer, argTypes, args, argTypesLength);
+
+    int sentData = send(socket, msg, msgSize, 0);
+
+    if (sentData == -1) {
+        return DATA_SEND_FAILED;
+    }
+
+    return sentData;
+}
+
+int sendExecFailureAfterFormatting(int socket, int reasonCode) {
+    int msgSize = getMessageSize(reasonCode);
+    msgSize += 8;
+    char msg[msgSize];
+    getMessage(msgSize, EXECUTE_FAILURE, msg, reasonCode);
+
+    int sentData = send(socket, msg, msgSize, 0);
+
+    if (sentData == -1) {
+        return DATA_SEND_FAILED;
+    }
+
+    return sentData;
+}
+
+int sendTerminateAfterFormatting(int socket) {
+    int msgSize = 4;
+    msgSize += 8;
+    char msg[msgSize];
+    getMessage(msgSize, TERMINATE, msg);
+
+    int sentData = send(socket, msg, msgSize, 0);
+
+    if (sentData == -1) {
+        return DATA_SEND_FAILED;
+    }
+
+    return sentData;
+}
+
+int receiveLengthAndType(int socket, int &length, int &msgType) {
+    char buffer[8];
+    int valread = read(socket, buffer, 8);
+
+    if (valread == 0) { // disconnected
+        return SOCKET_CONNECTION_FINISHED;
+    } else if (valread < 0) {
+        cerr << "ERROR reading from socket" << endl;
+        return READING_SOCKET_ERROR;
+
+    } else { // read
+        get4byteFromCharArray(&length, buffer);
+        get4byteFromCharArray(&msgType, buffer+4);
+    }
+    return 0;
+}
+
+int receiveRegisterResult(int socket, int &msgType, int &reasonCode) {
+    char buffer[12];
+    int valread = read(socket, buffer, 12);
+
+    if (valread == 0) {
+        return SOCKET_CONNECTION_FINISHED;
+    } else if (valread < 0) {
+        cerr << "ERROR reading from socket" << endl;
+        return READING_SOCKET_ERROR;
+
+    } else { // read
+        get4byteFromCharArray(&msgType, buffer+4);
+        get4byteFromCharArray(&reasonCode, buffer+8);
+    }
+    return 0;
+}
+
+void receiveServerIdentifierAndPortAndNameAndArgType(int msgLength, char *message, char *server_identifier, int &port,
+                                                    char *name, int *argTypes) {
+
+    // extract server_identifier
+    memcpy(server_identifier, message + 8, 1024);
+
+    // extract port
+    get4byteFromCharArray(&port, message+1032);
+
+    // extract name
+    memcpy(name, message + 1036, 64);
+
+    int argTypesLength = msgLength - 8 - 1024 - 4 - 64;
+    // extract argTypes
+    memcpy(argTypes, message + 1100, argTypesLength);
+
+}
+
+void receiveNameAndArgType(int msgLength, char *message, char *name, int *argTypes) {
+
+    // extract name
+    memcpy(name, message + 8, 64);
+
+    // extract argType
+    int argTypesLength = msgLength - 8 - 64;
+    memcpy(argTypes, message + 72, argTypesLength);
+
+}
+
+void receiveServerIdentifierAndPort(int msgLength, char *message, char *server_identifier, int &port) {
+
+    //extract server_identifier
+    memcpy(server_identifier, message + 8, 1024);
+
+    //extract port
+    get4byteFromCharArray(&port, message+1032);
+
+}
+
+void receiveReasonCode(int msgLength, char *message, int &reasonCode) {
+    //extract reasonCode
+    get4byteFromCharArray(&reasonCode, message+8);
+
+}
+
+void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes, int argTypesLength) {
+    // extract name
+    memcpy(name, message + 8, 64);
+    cout << "function name=" << name << endl;
+
+    // extract argType
+    cout << "argTypesLength=" << argTypesLength << endl;
+    memcpy(argTypes, message + 72, argTypesLength);
+}
+
+int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLength) {
     cout << "----------marshaling-----------" << endl;
+    std::vector< argT* > argTypeVector;
+
+    generateArgTvector(argTypes, argTypeVector);
+
     for (int i = 0; i < argTypesLength - 1; i++) {
         argT * argType = argTypeVector[i];
 
@@ -603,154 +817,6 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
 
     } // for
     cout << "--------marshaling end---------" << endl;
-
-//    int msgSize = getMessageSize(name, argTypes, args);
-//    msgSize += 8;
-//    cout << "send Msg size = " << msgSize << endl;
-//    char msg[msgSize];
-//    getMessage(msgSize, EXECUTE, msg, name, argTypes, args);
-//
-    int sentData = send(socket, msg, msgSize, 0);
-
-    if (sentData == -1) {
-        return DATA_SEND_FAILED;
-    }
-
-    return sentData;
-}
-
-int sendExecSuccessAfterFormatting(int socket, char *name, int *argTypes, void **args) {
-    int msgSize = getMessageSize(name, argTypes, args);
-    msgSize += 8;
-    char msg[msgSize];
-    getMessage(msgSize, EXECUTE_SUCCESS, msg, name, argTypes, args);
-
-    int sentData = send(socket, msg, msgSize, 0);
-
-    if (sentData == -1) {
-        return DATA_SEND_FAILED;
-    }
-
-    return sentData;
-}
-
-int sendExecFailureAfterFormatting(int socket, int reasonCode) {
-    int msgSize = getMessageSize(reasonCode);
-    msgSize += 8;
-    char msg[msgSize];
-    getMessage(msgSize, EXECUTE_FAILURE, msg, reasonCode);
-
-    int sentData = send(socket, msg, msgSize, 0);
-
-    if (sentData == -1) {
-        return DATA_SEND_FAILED;
-    }
-
-    return sentData;
-}
-
-int sendTerminateAfterFormatting(int socket) {
-    int msgSize = 4;
-    msgSize += 8;
-    char msg[msgSize];
-    getMessage(msgSize, TERMINATE, msg);
-
-    int sentData = send(socket, msg, msgSize, 0);
-
-    if (sentData == -1) {
-        return DATA_SEND_FAILED;
-    }
-
-    return sentData;
-}
-
-int receiveLengthAndType(int socket, int &length, int &msgType) {
-    char buffer[8];
-    int valread = read(socket, buffer, 8);
-
-    if (valread == 0) { // disconnected
-        return SOCKET_CONNECTION_FINISHED;
-    } else if (valread < 0) {
-        cerr << "ERROR reading from socket" << endl;
-        return READING_SOCKET_ERROR;
-
-    } else { // read
-        get4byteFromCharArray(&length, buffer);
-        get4byteFromCharArray(&msgType, buffer+4);
-    }
-    return 0;
-}
-
-int receiveRegisterResult(int socket, int &msgType, int &reasonCode) {
-    char buffer[12];
-    int valread = read(socket, buffer, 12);
-
-    if (valread == 0) {
-        return SOCKET_CONNECTION_FINISHED;
-    } else if (valread < 0) {
-        cerr << "ERROR reading from socket" << endl;
-        return READING_SOCKET_ERROR;
-
-    } else { // read
-        get4byteFromCharArray(&msgType, buffer+4);
-        get4byteFromCharArray(&reasonCode, buffer+8);
-    }
-    return 0;
-}
-
-void receiveServerIdentifierAndPortAndNameAndArgType(int msgLength, char *message, char *server_identifier, int &port,
-                                                    char *name, int *argTypes) {
-
-    // extract server_identifier
-    memcpy(server_identifier, message + 8, 1024);
-
-    // extract port
-    get4byteFromCharArray(&port, message+1032);
-
-    // extract name
-    memcpy(name, message + 1036, 64);
-
-    int argTypesLength = msgLength - 8 - 1024 - 4 - 64;
-    // extract argTypes
-    memcpy(argTypes, message + 1100, argTypesLength);
-
-}
-
-void receiveNameAndArgType(int msgLength, char *message, char *name, int *argTypes) {
-
-    // extract name
-    memcpy(name, message + 8, 64);
-
-    // extract argType
-    int argTypesLength = msgLength - 8 - 64;
-    memcpy(argTypes, message + 72, argTypesLength);
-
-}
-
-void receiveServerIdentifierAndPort(int msgLength, char *message, char *server_identifier, int &port) {
-
-    //extract server_identifier
-    memcpy(server_identifier, message + 8, 1024);
-
-    //extract port
-    get4byteFromCharArray(&port, message+1032);
-
-}
-
-void receiveReasonCode(int msgLength, char *message, int &reasonCode) {
-    //extract reasonCode
-    get4byteFromCharArray(&reasonCode, message+8);
-
-}
-
-void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes, int argTypesLength) {
-    // extract name
-    memcpy(name, message + 8, 64);
-    cout << "function name=" << name << endl;
-
-    // extract argType
-    cout << "argTypesLength=" << argTypesLength << endl;
-    memcpy(argTypes, message + 72, argTypesLength);
 }
 
 int unmarshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLength, bool allocateMemory) {
