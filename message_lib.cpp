@@ -759,7 +759,11 @@ int unmarshallData(char * msgPointer, int * argTypes, void ** args, int argTypes
 
     generateArgTvector(argTypes, argTypeVector);
 
-    for (int i = 0; i < argTypesLength - 1; i++) {
+    cout << "========START UNMARSHALLING=========" << endl;
+
+    int argNum = (argTypesLength / 4);
+
+    for (int i = 0; i < argNum - 1; i++) {
 
         argT * argType = argTypeVector[i];
 
@@ -832,13 +836,19 @@ int unmarshallData(char * msgPointer, int * argTypes, void ** args, int argTypes
                 case ARG_INT: // 4byte
                     if (argType->arraysize == 0) {
                         ints = new int();
+                        cout << "Unmarshalling ints" << endl;
                         get4byteFromCharArray(ints, msgPointer);
                         msgPointer += 4;
+                        cout << "Int value: " << *ints << endl;
+                        args[i] = ints;
                     } else {
                         ints = new int[argType->arraysize];
                         for (int j = 0; j < argType->arraysize; j++) {
                             get4byteFromCharArray(ints, msgPointer);
                             msgPointer += 4;
+                            if (j == 0) {
+                                args[i] = ints;
+                            }
                             ints += 1;
                         }
                     }

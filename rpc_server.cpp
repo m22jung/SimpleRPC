@@ -218,10 +218,15 @@ int rpcExecute() {
 
             int argslen = msgLength - 8 - 64 - argTypeslen;
             void ** receivedArgs = (void**)malloc(argslen * sizeof(void*));
-            unmarshallData(message + 8 + 64 + argTypeslen, argTypes, receivedArgs, argTypeslen, true);
+            int unmarshallResult = unmarshallData(message + 8 + 64 + argTypeslen, argTypes, receivedArgs, argTypeslen, true);
+            if (unmarshallResult != 0) {
+                cout << "UNMARSHALL FAILED" << endl;
+            }
 
             localDatabase[sameDataIndex]->f(argTypes, receivedArgs);
+            cout << "Returned result from f_skel: " << (int *)receivedArgs[0] << endl;
             sendExecSuccessAfterFormatting(newsockfd, name, argTypes, receivedArgs);
+            cout << "Sent Exec Success Msg" << endl;
         }
         close( newsockfd );
     } // while
