@@ -205,8 +205,6 @@ int rpcExecute() {
         int argTypes[argTypeslen];
         receiveNameAndArgTypeForRPCCall(message, name, argTypes, argTypeslen);
 
-        //void * args[argTypeslen - 1];
-
         cout << "DEBUG:::: Length is " << msgLength << endl;
 
         int sameDataIndex = matchingArgT(name, argTypes, &localDatabase); // search database
@@ -218,7 +216,7 @@ int rpcExecute() {
             // run function skeleton
             cout << "execute function skeleton. fn_name=" << localDatabase[sameDataIndex]->name << endl;
             void ** receivedArgs = (void **) new(argTypeslen * sizeof(void *));
-            unmarshallData(message, argTypes, receivedArgs, argTypeslen, true);
+            unmarshallData(message + 8 + 64 + argTypeslen, argTypes, receivedArgs, argTypeslen, true);
 
             localDatabase[sameDataIndex]->f(argTypes, receivedArgs);
             sendExecSuccessAfterFormatting(newsockfd, name, argTypes, receivedArgs);
