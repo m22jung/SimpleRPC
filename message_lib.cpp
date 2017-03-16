@@ -400,14 +400,24 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
     cout << "msg Size from client before sending is " << msgSize << endl;
 
 
-    char msg[msgSize + 8];
+    char msg[msgSize];
     putMsglengthAndMsgType(msgSize, EXECUTE, msg);
 
     memcpy(msg + 8, name, 64);
 
 
     int argTypesSize = argTypesLength * 4;
+    cout << "argTypesSize=" << argTypesSize << endl;
     memcpy(msg + 72, argTypes, argTypesSize);
+
+    int argTypeslen = 72;
+    for (;;) {
+        int temp;
+        get4byteFromCharArray(&temp, msg + argTypeslen);
+        cout << "pointer=" << argTypeslen << " temp=" << temp << endl;
+        argTypeslen += 4;
+        if (temp == 0) break;
+    }
 
     char * msgPointer = msg + 8 + 64 + argTypesLength;
 
@@ -655,12 +665,12 @@ void receiveReasonCode(int msgLength, char *message, int &reasonCode) {
 
 }
 
-void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes) {
+void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes, int argTypesLength) {
     // extract name
     memcpy(name, message + 8, 64);
+    cout << "function name=" << name << endl;
 
     // extract argType
-    int argTypesLength = getMessageSize(name, argTypes) - 64;
     cout << "argTypesLength=" << argTypesLength << endl;
     memcpy(argTypes, message + 72, argTypesLength);
 }

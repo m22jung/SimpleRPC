@@ -58,13 +58,16 @@ int sendExecSuccessAfterFormatting(int socket, char * name, int * argTypes, void
 int sendExecFailureAfterFormatting(int socket, int reasonCode);
 int sendTerminateAfterFormatting(int socket);
 
+void put4byteToCharArray(char *dest, int value);
+void get4byteFromCharArray(int *dest, char *from);
+
 int receiveLengthAndType(int socket, int &length, int &msgType);
 void receiveServerIdentifierAndPortAndNameAndArgType(int msgLength, char * message, char * server_identifier, int &port, char * name, int * argTypes);
 void receiveNameAndArgType(int msgLength, char * message, char * name, int * argTypes);
 int receiveRegisterResult(int socket, int &msgType, int &reasonCode);
 void receiveServerIdentifierAndPort(int msgLength, char * message, char * server_identifier, int &port);
 void receiveReasonCode(int msgLength, char * message, int &reasonCode);
-void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes);
+void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes, int argTypesLength);
 
 
 

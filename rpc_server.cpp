@@ -192,15 +192,20 @@ int rpcExecute() {
         cout << "Second read of the message" << endl;
 
         char name[64];
-        int argTypeslen = (msgLength - 8 - 64 + 4) / 2;
-        int argTypes[argTypeslen];
-        void * args[argTypeslen - 1];
-
-        if (msgType != EXECUTE) {
-            cout << "?!?!?#?!@#?!?@#" << endl;
+        int argTypeslen = 72;
+        for (;;) {
+            int temp;
+            get4byteFromCharArray(&temp, message + argTypeslen);
+            cout << "pointer=" << argTypeslen << " temp=" << temp << endl;
+            argTypeslen += 4;
+            if (temp == 0) break;
         }
+        argTypeslen -= 72;
 
-        receiveNameAndArgTypeForRPCCall(message, name, argTypes);
+        int argTypes[argTypeslen];
+        receiveNameAndArgTypeForRPCCall(message, name, argTypes, argTypeslen);
+
+        //void * args[argTypeslen - 1];
 
         cout << "DEBUG:::: Length is " << msgLength << endl;
 
@@ -212,8 +217,8 @@ int rpcExecute() {
         } else {
             // run function skeleton
             cout << "execute function skeleton. fn_name=" << localDatabase[sameDataIndex]->name << endl;
-            localDatabase[sameDataIndex]->f(argTypes, args);
-            sendExecSuccessAfterFormatting(newsockfd, name, argTypes, args);
+            //localDatabase[sameDataIndex]->f(argTypes, args);
+            //sendExecSuccessAfterFormatting(newsockfd, name, argTypes, args);
         }
         close( newsockfd );
     } // while
