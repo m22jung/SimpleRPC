@@ -419,7 +419,7 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
         if (temp == 0) break;
     }
 
-    char * msgPointer = msg + 8 + 64 + argTypesLength;
+    char * msgPointer = msg + 8 + 64 + (argTypesLength * 4);
 
     for (int i = 0; i < argTypesLength - 1; i++) {
         argT * argType = argTypeVector[i];
