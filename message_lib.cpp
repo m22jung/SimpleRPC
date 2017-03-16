@@ -405,7 +405,6 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
 
     memcpy(msg + 8, name, 64);
 
-
     int argTypesSize = argTypesLength * 4;
     cout << "argTypesSize=" << argTypesSize << endl;
     memcpy(msg + 72, argTypes, argTypesSize);
@@ -450,13 +449,13 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
             case ARG_SHORT: // 2 byte
                 shorts = (short *)singleArgument;
                 if (argType->arraysize == 0) {
-                    msgPointer[0] = (*shorts >> 8) & 0xFF;
-                    msgPointer[1] = *shorts & 0xFF;
+                    msgPointer[1] = (*shorts >> 8) & 0xFF;
+                    msgPointer[0] = *shorts & 0xFF;
                     msgPointer += 2;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
-                        msgPointer[0] = (shorts[j] >> 8) & 0xFF;
-                        msgPointer[1] = shorts[j] & 0xFF;
+                        msgPointer[1] = (shorts[j] >> 8) & 0xFF;
+                        msgPointer[0] = shorts[j] & 0xFF;
                         msgPointer += 2;
                     }
                 }
@@ -464,17 +463,19 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
             case ARG_INT: // 4byte
                 ints = (int *)singleArgument;
                 if (argType->arraysize == 0) {
-                    msgPointer[0] = (*ints >> 24) & 0xFF;
-                    msgPointer[1] = (*ints >> 16) & 0xFF;
-                    msgPointer[2] = (*ints >> 8) & 0xFF;
-                    msgPointer[3] = *ints & 0xFF;
+                    put4byteToCharArray(msgPointer, *ints);
+//                    msgPointer[0] = (*ints >> 24) & 0xFF;
+//                    msgPointer[1] = (*ints >> 16) & 0xFF;
+//                    msgPointer[2] = (*ints >> 8) & 0xFF;
+//                    msgPointer[3] = *ints & 0xFF;
                     msgPointer += 4;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
-                        msgPointer[0] = (ints[j] >> 24) & 0xFF;
-                        msgPointer[1] = (ints[j] >> 16) & 0xFF;
-                        msgPointer[2] = (ints[j] >> 8) & 0xFF;
-                        msgPointer[3] = ints[j] & 0xFF;
+                        put4byteToCharArray(msgPointer, ints[j]);
+//                        msgPointer[0] = (ints[j] >> 24) & 0xFF;
+//                        msgPointer[1] = (ints[j] >> 16) & 0xFF;
+//                        msgPointer[2] = (ints[j] >> 8) & 0xFF;
+//                        msgPointer[3] = ints[j] & 0xFF;
                         msgPointer += 4;
                     }
                 }
@@ -482,17 +483,17 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
             case ARG_LONG: // 4 byte
                 longs = (long *)singleArgument;
                 if (argType->arraysize == 0) {
-                    msgPointer[0] = (*longs >> 24) & 0xFF;
-                    msgPointer[1] = (*longs >> 16) & 0xFF;
-                    msgPointer[2] = (*longs >> 8) & 0xFF;
-                    msgPointer[3] = *longs & 0xFF;
+                    msgPointer[3] = (*longs >> 24) & 0xFF;
+                    msgPointer[2] = (*longs >> 16) & 0xFF;
+                    msgPointer[1] = (*longs >> 8) & 0xFF;
+                    msgPointer[0] = *longs & 0xFF;
                     msgPointer += 4;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
-                        msgPointer[0] = (longs[j] >> 24) & 0xFF;
-                        msgPointer[1] = (longs[j] >> 16) & 0xFF;
-                        msgPointer[2] = (longs[j] >> 8) & 0xFF;
-                        msgPointer[3] = longs[j] & 0xFF;
+                        msgPointer[3] = (longs[j] >> 24) & 0xFF;
+                        msgPointer[2] = (longs[j] >> 16) & 0xFF;
+                        msgPointer[1] = (longs[j] >> 8) & 0xFF;
+                        msgPointer[0] = longs[j] & 0xFF;
                         msgPointer += 4;
                     }
                 }
@@ -501,11 +502,33 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
                 doubles = (double *)singleArgument;
                 if (argType->arraysize == 0) {
 
-                    msgPointer = (char*)(doubles);
+                    char *ptr = (char *)(doubles);
+
+                    msgPointer[7] = *ptr;
+                    msgPointer[6] = *(++ptr);
+                    msgPointer[5] = *(++ptr);
+                    msgPointer[4] = *(++ptr);
+                    msgPointer[3] = *(++ptr);
+                    msgPointer[2] = *(++ptr);
+                    msgPointer[1] = *(++ptr);
+                    msgPointer[0] = *(++ptr);
+
                     msgPointer += 8;
+
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
-                        msgPointer = (char*)(&doubles[j]);
+
+                        char *ptr = (char*)(&doubles[j]);
+
+                        msgPointer[7] = *ptr;
+                        msgPointer[6] = *(++ptr);
+                        msgPointer[5] = *(++ptr);
+                        msgPointer[4] = *(++ptr);
+                        msgPointer[3] = *(++ptr);
+                        msgPointer[2] = *(++ptr);
+                        msgPointer[1] = *(++ptr);
+                        msgPointer[0] = *(++ptr);
+
                         msgPointer += 8;
                     }
                 }
@@ -513,11 +536,25 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
             case ARG_FLOAT: // 4 byte
                 floats = (float *)singleArgument;
                 if (argType->arraysize == 0) {
-                    msgPointer = (char*)(floats);
+
+                    char *ptr = (char *)(doubles);
+
+                    msgPointer[3] = *ptr;
+                    msgPointer[2] = *(++ptr);
+                    msgPointer[1] = *(++ptr);
+                    msgPointer[0] = *(++ptr);
+
                     msgPointer += 4;
+
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
-                        msgPointer = (char*)(&floats[j]);
+                        char *ptr = (char*)(&floats[j]);
+
+                        msgPointer[3] = *ptr;
+                        msgPointer[2] = *(++ptr);
+                        msgPointer[1] = *(++ptr);
+                        msgPointer[0] = *(++ptr);
+
                         msgPointer += 4;
                     }
                 }
@@ -674,3 +711,371 @@ void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes, i
     cout << "argTypesLength=" << argTypesLength << endl;
     memcpy(argTypes, message + 72, argTypesLength);
 }
+
+int unmarshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLength, bool allocateMemory) {
+
+    std::vector< argT* > argTypeVector;
+
+    generateArgTvector(argTypes, argTypeVector);
+
+    for (int i = 0; i < argTypesLength - 1; i++) {
+
+        argT * argType = argTypeVector[i];
+
+        char * chars;
+        short * shorts;
+        int * ints;
+        long * longs;
+        double * doubles;
+        float * floats;
+
+        if (allocateMemory) {
+            switch (argType->type) {
+                case ARG_CHAR:
+                    if (argType->arraysize == 0) {
+                        chars = new char();
+                        *chars = msgPointer[0];
+
+                        args[i] = chars;
+                        msgPointer += 1;
+                    } else {
+                        chars = new char[argType->arraysize];
+                        for (int j = 0; j < argType->arraysize; j++) {
+
+                            *chars = msgPointer[0];
+
+                            msgPointer += 1;
+
+                            if (j == 0) {
+                                args[i] = chars;
+                            }
+
+                            chars += 1;
+                        }
+                    }
+                    break;
+
+                case ARG_SHORT: // 2 byte
+                    if (argType->arraysize == 0) {
+                        shorts = new short();
+                        char *ptr = (char*)(shorts);
+
+                        ptr[0] = *msgPointer;
+                        ptr[1] = *(++msgPointer);
+
+                        *shorts = *((short*)ptr);
+
+                        args[i] = shorts;
+                        msgPointer += 1;
+                    } else {
+                        shorts = new short[argType->arraysize];
+                        for (int j = 0; j < argType->arraysize; j++) {
+
+                            char *ptr = (char*)(shorts);
+
+                            ptr[0] = *msgPointer;
+                            ptr[1] = *(++msgPointer);
+
+                            *shorts = *((short*)ptr);
+
+                            if (j == 0) {
+                                args[i] = shorts;
+                            }
+                            msgPointer += 1;
+                            shorts += 1;
+
+                        }
+                    }
+                    break;
+
+                case ARG_INT: // 4byte
+                    if (argType->arraysize == 0) {
+                        ints = new int();
+                        get4byteFromCharArray(ints, msgPointer);
+                        msgPointer += 4;
+                    } else {
+                        ints = new int[argType->arraysize];
+                        for (int j = 0; j < argType->arraysize; j++) {
+                            get4byteFromCharArray(ints, msgPointer);
+                            msgPointer += 4;
+                            ints += 1;
+                        }
+                    }
+                    break;
+                case ARG_LONG: // 4 byte
+                    if (argType->arraysize == 0) {
+                        longs = new long();
+                        char *ptr = (char*)(longs);
+
+                        ptr[3] = (*msgPointer >> 24) & 0xFF;
+                        ptr[2] = (*msgPointer >> 16) & 0xFF;
+                        ptr[1] = (*msgPointer >> 8) & 0xFF;
+                        ptr[0] = *msgPointer & 0xFF;
+
+                        *longs = *((long*)ptr);
+                        args[i] = longs;
+                        msgPointer += 4;
+                    } else {
+                        longs = new long[argType->arraysize];
+                        for (int j = 0; j < argType->arraysize; j++) {
+
+                            char *ptr = (char*)(longs);
+
+                            ptr[3] = (msgPointer[j] >> 24) & 0xFF;
+                            ptr[2] = (msgPointer[j] >> 16) & 0xFF;
+                            ptr[1] = (msgPointer[j] >> 8) & 0xFF;
+                            ptr[0] = msgPointer[j] & 0xFF;
+
+                            *longs = *((long*)ptr);
+
+                            if (j == 0) {
+                                args[i] = longs;
+                            }
+
+                            longs += 1;
+                            msgPointer += 4;
+                        }
+                    }
+                    break;
+                case ARG_DOUBLE: // 8byte
+                    if (argType->arraysize == 0) {
+                        doubles = new double();
+
+                        char *ptr = (char *)(doubles);
+
+                        ptr[7] = *msgPointer;
+                        ptr[6] = *(++msgPointer);
+                        ptr[5] = *(++msgPointer);
+                        ptr[4] = *(++msgPointer);
+                        ptr[3] = *(++msgPointer);
+                        ptr[2] = *(++msgPointer);
+                        ptr[1] = *(++msgPointer);
+                        ptr[0] = *(++msgPointer);
+
+                        *doubles = *((double*)ptr);
+
+                        args[i] = doubles;
+                        msgPointer += 1;
+
+                    } else {
+                        doubles = new double[argType->arraysize];
+                        for (int j = 0; j < argType->arraysize; j++) {
+
+                            char *ptr = (char*)(&doubles[j]);
+
+                            ptr[7] = *msgPointer;
+                            ptr[6] = *(++msgPointer);
+                            ptr[5] = *(++msgPointer);
+                            ptr[4] = *(++msgPointer);
+                            ptr[3] = *(++msgPointer);
+                            ptr[2] = *(++msgPointer);
+                            ptr[1] = *(++msgPointer);
+                            ptr[0] = *(++msgPointer);
+
+                            *doubles = *((double*)ptr);
+
+                            if (j == 0) {
+                                args[i] = doubles;
+                            }
+
+                            msgPointer += 1;
+                            doubles += 1;
+                        }
+                    }
+                    break;
+                case ARG_FLOAT: // 4 byte
+                    if (argType->arraysize == 0) {
+                        floats = new float();
+
+                        char *ptr = (char *)(floats);
+
+                        ptr[3] = *msgPointer;
+                        ptr[2] = *(++msgPointer);
+                        ptr[1] = *(++msgPointer);
+                        ptr[0] = *(++msgPointer);
+
+                        *floats = *((float*)ptr);
+
+                        args[i] = floats;
+
+                        msgPointer += 1;
+
+                    } else {
+                        floats = new float[argType->arraysize];
+                        for (int j = 0; j < argType->arraysize; j++) {
+
+                            char *ptr = (char*)(&floats[j]);
+
+                            ptr[3] = *msgPointer;
+                            ptr[2] = *(++msgPointer);
+                            ptr[1] = *(++msgPointer);
+                            ptr[0] = *(++msgPointer);
+
+                            if (j == 0) {
+                                args[i] = floats;
+                            }
+
+                            floats += 1;
+                            msgPointer += 1;
+
+                        }
+                    }
+                    break;
+            }
+        } else {
+            switch (argType->type) {
+                case ARG_CHAR:
+                    if (argType->arraysize == 0) {
+
+                        *((char *)args[i]) = msgPointer[0];
+                        msgPointer += 1;
+
+                    } else {
+                        for (int j = 0; j < argType->arraysize; j++) {
+
+                            ((char *)args[i])[j] = msgPointer[j];
+                            msgPointer += 1;
+
+                        }
+                    }
+                    break;
+
+                case ARG_SHORT: // 2 byte
+                    if (argType->arraysize == 0) {
+                        shorts = (short *)args[i];
+
+                        char *ptr = (char*)(shorts);
+                        ptr[0] = *msgPointer;
+                        ptr[1] = *(++msgPointer);
+
+//                        *shorts = *((short*)ptr);
+
+                        msgPointer += 1;
+
+                    } else {
+
+                        shorts = (short *) args[i];
+
+                        for (int j = 0; j < argType->arraysize; j++) {
+
+                            char *ptr = (char*)(shorts);
+                            ptr[0] = *msgPointer;
+                            ptr[1] = *(++msgPointer);
+
+                            msgPointer += 1;
+                            shorts += 1;
+
+                        }
+                    }
+                    break;
+
+                case ARG_INT: // 4byte
+                    if (argType->arraysize == 0) {
+                        ints = (int *)args[i];
+                        get4byteFromCharArray(ints, msgPointer);
+                        msgPointer += 4;
+                    } else {
+                        ints = (int *) args[i];
+                        for (int j = 0; j < argType->arraysize; j++) {
+                            get4byteFromCharArray(ints, msgPointer);
+                            msgPointer += 4;
+                            ints += 1;
+                        }
+                    }
+                    break;
+                case ARG_LONG: // 4 byte
+                    if (argType->arraysize == 0) {
+                        longs = (long *)args[i];
+
+                        char *ptr = (char*)(longs);
+                        ptr[3] = (*msgPointer >> 24) & 0xFF;
+                        ptr[2] = (*msgPointer >> 16) & 0xFF;
+                        ptr[1] = (*msgPointer >> 8) & 0xFF;
+                        ptr[0] = *msgPointer & 0xFF;
+
+                        msgPointer += 4;
+                    } else {
+                        longs = (long *) args[i];
+                        for (int j = 0; j < argType->arraysize; j++) {
+                            char *ptr = (char*)(longs);
+
+                            ptr[3] = (msgPointer[j] >> 24) & 0xFF;
+                            ptr[2] = (msgPointer[j] >> 16) & 0xFF;
+                            ptr[1] = (msgPointer[j] >> 8) & 0xFF;
+                            ptr[0] = msgPointer[j] & 0xFF;
+
+                            longs += 1;
+                            msgPointer += 4;
+                        }
+                    }
+                    break;
+                case ARG_DOUBLE: // 8byte
+                    if (argType->arraysize == 0) {
+                        doubles = (double *)args[i];
+
+                        char *ptr = (char *)(doubles);
+
+                        ptr[7] = *msgPointer;
+                        ptr[6] = *(++msgPointer);
+                        ptr[5] = *(++msgPointer);
+                        ptr[4] = *(++msgPointer);
+                        ptr[3] = *(++msgPointer);
+                        ptr[2] = *(++msgPointer);
+                        ptr[1] = *(++msgPointer);
+                        ptr[0] = *(++msgPointer);
+
+                        msgPointer += 1;
+
+                    } else {
+                        doubles = (double *) args[i];
+                        for (int j = 0; j < argType->arraysize; j++) {
+
+                            char *ptr = (char*)(doubles);
+
+                            ptr[7] = *msgPointer;
+                            ptr[6] = *(++msgPointer);
+                            ptr[5] = *(++msgPointer);
+                            ptr[4] = *(++msgPointer);
+                            ptr[3] = *(++msgPointer);
+                            ptr[2] = *(++msgPointer);
+                            ptr[1] = *(++msgPointer);
+                            ptr[0] = *(++msgPointer);
+
+                            msgPointer += 1;
+                            doubles += 1;
+                        }
+                    }
+                    break;
+                case ARG_FLOAT: // 4 byte
+                    if (argType->arraysize == 0) {
+                        floats = (float *) args[i];
+
+                        char *ptr = (char *)(floats);
+                        ptr[3] = *msgPointer;
+                        ptr[2] = *(++msgPointer);
+                        ptr[1] = *(++msgPointer);
+                        ptr[0] = *(++msgPointer);
+
+                        msgPointer += 1;
+
+                    } else {
+                        floats = (float *) args[i];
+                        for (int j = 0; j < argType->arraysize; j++) {
+
+                            char *ptr = (char*)(floats);
+                            ptr[3] = *msgPointer;
+                            ptr[2] = *(++msgPointer);
+                            ptr[1] = *(++msgPointer);
+                            ptr[0] = *(++msgPointer);
+
+                            floats += 1;
+                            msgPointer += 1;
+
+                        }
+                    }
+                    break;
+            } // switch
+        } // else
+    } // for
+    return 0;
+} // end of function

@@ -217,8 +217,11 @@ int rpcExecute() {
         } else {
             // run function skeleton
             cout << "execute function skeleton. fn_name=" << localDatabase[sameDataIndex]->name << endl;
-            //localDatabase[sameDataIndex]->f(argTypes, args);
-            //sendExecSuccessAfterFormatting(newsockfd, name, argTypes, args);
+            void ** receivedArgs = (void **) new(argTypeslen * sizeof(void *));
+            unmarshallData(message, argTypes, receivedArgs, argTypeslen, true);
+
+            localDatabase[sameDataIndex]->f(argTypes, receivedArgs);
+            sendExecSuccessAfterFormatting(newsockfd, name, argTypes, receivedArgs);
         }
         close( newsockfd );
     } // while
