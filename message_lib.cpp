@@ -37,7 +37,7 @@ void generateArgTvector(int *argTypes, vector< argT* > &v) {
                 break;
         }
 
-        type = (argTypes[i] >> 16) & 0x00000006;
+        type = (argTypes[i] >> 16) & 0x00000007;
         cout << " type=" << type;
 
         arraysize = argTypes[i] & 0x0000FFFF;
@@ -379,31 +379,54 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
     generateArgTvector(argTypes, argTypeVector);
 
     int argTypesLength = argTypeVector.size() + 1;
+    int argTypesSize = argTypesLength * 4;
 
     // Calculate msgSize
     int msgSize = 0;
+    msgSize += 8; // Length and MsgType
+    msgSize += argTypesSize; // ArgTypes
+    msgSize += 64; // Name
 
     for (int i = 0; i < argTypeVector.size(); i++) {
         if (argTypeVector[i]->arraysize == 0) {
-            msgSize++;
+            switch (argTypeVector[i]->type) {
+                case ARG_CHAR:
+                    msgSize += 1; break;
+                case ARG_SHORT:
+                    msgSize += 2; break;
+                case ARG_INT:
+                    msgSize += 4; break;
+                case ARG_LONG:
+                    msgSize += 4; break;
+                case ARG_DOUBLE:
+                    msgSize += 8; break;
+                case ARG_FLOAT:
+                    msgSize += 4; break;
+            }
         } else {
-            msgSize += argTypeVector[i]->arraysize;
+            switch (argTypeVector[i]->type) {
+                case ARG_CHAR:
+                    msgSize += (argTypeVector[i]->arraysize * 1); break;
+                case ARG_SHORT:
+                    msgSize += (argTypeVector[i]->arraysize * 2); break;
+                case ARG_INT:
+                    msgSize += (argTypeVector[i]->arraysize * 4); break;
+                case ARG_LONG:
+                    msgSize += (argTypeVector[i]->arraysize * 4); break;
+                case ARG_DOUBLE:
+                    msgSize += (argTypeVector[i]->arraysize * 8); break;
+                case ARG_FLOAT:
+                    msgSize += (argTypeVector[i]->arraysize * 4); break;
+            }
         }
     }
-
-    msgSize += 2; // Length and MsgType
-    msgSize += argTypesLength; // ArgTypes
-    msgSize = msgSize * 4;
-    msgSize += 64; // Name
     cout << "msg Size from client before sending is " << msgSize << endl;
-
 
     char msg[msgSize];
     putMsglengthAndMsgType(msgSize, EXECUTE, msg);
 
     memcpy(msg + 8, name, 64);
 
-    int argTypesSize = argTypesLength * 4;
     cout << "argTypesSize=" << argTypesSize << endl;
     memcpy(msg + 72, argTypes, argTypesSize);
 
@@ -418,6 +441,7 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
 
     char * msgPointer = msg + 8 + 64 + (argTypesLength * 4);
 
+    cout << "----------marshaling-----------" << endl;
     for (int i = 0; i < argTypesLength - 1; i++) {
         argT * argType = argTypeVector[i];
 
@@ -430,35 +454,43 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
         double * doubles;
         float * floats;
 
+        cout << "arg" << i << " ";
         switch (argType->type) {
             case ARG_CHAR:
+                cout << "type=char : ";
                 chars = (char *)singleArgument;
                 if (argType->arraysize == 0) {
                     *msgPointer = chars[0];
                     msgPointer += 1;
+                    cout << *chars << " " << endl;
                 }
                 else {
                     for(int j = 0; j < argType->arraysize; j++) {
                         *msgPointer = chars[j];
                         msgPointer += 1;
-                    }
+                        cout << chars[j] << " ";
+                    } cout << endl;
                 }
                 break;
             case ARG_SHORT: // 2 byte
+                cout << "type=short : ";
                 shorts = (short *)singleArgument;
                 if (argType->arraysize == 0) {
                     msgPointer[1] = (*shorts >> 8) & 0xFF;
                     msgPointer[0] = *shorts & 0xFF;
                     msgPointer += 2;
+                    cout << *shorts << " " << endl;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
                         msgPointer[1] = (shorts[j] >> 8) & 0xFF;
                         msgPointer[0] = shorts[j] & 0xFF;
                         msgPointer += 2;
-                    }
+                        cout << shorts[j] << " ";
+                    } cout << endl;
                 }
                 break;
             case ARG_INT: // 4byte
+                cout << "type=int : ";
                 ints = (int *)singleArgument;
                 if (argType->arraysize == 0) {
                     put4byteToCharArray(msgPointer, *ints);
@@ -467,6 +499,7 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
 //                    msgPointer[2] = (*ints >> 8) & 0xFF;
 //                    msgPointer[3] = *ints & 0xFF;
                     msgPointer += 4;
+                    cout << *ints << " " << endl;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
                         put4byteToCharArray(msgPointer, ints[j]);
@@ -475,10 +508,12 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
 //                        msgPointer[2] = (ints[j] >> 8) & 0xFF;
 //                        msgPointer[3] = ints[j] & 0xFF;
                         msgPointer += 4;
-                    }
+                        cout << ints[j] << " ";
+                    } cout << endl;
                 }
                 break;
             case ARG_LONG: // 4 byte
+                cout << "type=long : ";
                 longs = (long *)singleArgument;
                 if (argType->arraysize == 0) {
                     msgPointer[3] = (*longs >> 24) & 0xFF;
@@ -486,6 +521,7 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
                     msgPointer[1] = (*longs >> 8) & 0xFF;
                     msgPointer[0] = *longs & 0xFF;
                     msgPointer += 4;
+                    cout << *longs << " " << endl;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
                         msgPointer[3] = (longs[j] >> 24) & 0xFF;
@@ -493,10 +529,12 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
                         msgPointer[1] = (longs[j] >> 8) & 0xFF;
                         msgPointer[0] = longs[j] & 0xFF;
                         msgPointer += 4;
-                    }
+                        cout << longs[j] << " ";
+                    } cout << endl;
                 }
                 break;
             case ARG_DOUBLE: // 8byte
+                cout << "type=double : ";
                 doubles = (double *)singleArgument;
                 if (argType->arraysize == 0) {
 
@@ -512,7 +550,7 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
                     msgPointer[0] = *(++ptr);
 
                     msgPointer += 8;
-
+                    cout << *doubles << " " << endl;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
 
@@ -528,10 +566,12 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
                         msgPointer[0] = *(++ptr);
 
                         msgPointer += 8;
-                    }
+                        cout << doubles[j] << " ";
+                    } cout << endl;
                 }
                 break;
             case ARG_FLOAT: // 4 byte
+                cout << "type=float : ";
                 floats = (float *)singleArgument;
                 if (argType->arraysize == 0) {
 
@@ -543,6 +583,7 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
                     msgPointer[0] = *(++ptr);
 
                     msgPointer += 4;
+                    cout << *floats << " " << endl;
 
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
@@ -554,12 +595,14 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
                         msgPointer[0] = *(++ptr);
 
                         msgPointer += 4;
-                    }
+                        cout << floats[j] << " ";
+                    } cout << endl;
                 }
                 break;
-        }
+        } // switch
 
-    }
+    } // for
+    cout << "--------marshaling end---------" << endl;
 
 //    int msgSize = getMessageSize(name, argTypes, args);
 //    msgSize += 8;
