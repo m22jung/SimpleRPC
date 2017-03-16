@@ -219,10 +219,12 @@ int rpcCall(char* name, int* argTypes, void** args) {
         return READING_SOCKET_ERROR;
     }
     switch(msgType) {
-        case REGISTER_SUCCESS:
-            receiveNameAndArgTypeAndArgs(length, message, name, argTypes, args);
+        case EXECUTE_SUCCESS:
+            cout << "got EXECUTE_SUCCESS message" << endl;
+            //receiveNameAndArgTypeAndArgs(length, message, name, argTypes, args);
             break;
-        case REGISTER_FAILURE:
+        case EXECUTE_FAILURE:
+            cout << "got EXECUTE_FAILURE message" << endl;
             receiveReasonCode(length, message, reasonCode);
             break;
     }

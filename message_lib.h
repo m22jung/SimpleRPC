@@ -64,7 +64,7 @@ void receiveNameAndArgType(int msgLength, char * message, char * name, int * arg
 int receiveRegisterResult(int socket, int &msgType, int &reasonCode);
 void receiveServerIdentifierAndPort(int msgLength, char * message, char * server_identifier, int &port);
 void receiveReasonCode(int msgLength, char * message, int &reasonCode);
-void receiveNameAndArgTypeAndArgs(int msgLength, char * message, char * name, int * argTypes, void** args);
+void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes);
 
 
 

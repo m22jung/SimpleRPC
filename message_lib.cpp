@@ -205,29 +205,21 @@ int getMessageSize(int reasonCode) {
 void put4byteToCharArray(char *dest, int value) {
     char *ptr = (char*)(&value);
 
-    dest[3] = *ptr;
-    dest[2] = *(++ptr);
+    dest[0] = *ptr;
     dest[1] = *(++ptr);
-    dest[0] = *(++ptr);
-    // dest[0] = (value >> 24) & 0xFF;
-    // dest[1] = (value >> 16) & 0xFF;
-    // dest[2] = (value >> 8) & 0xFF;
-    // dest[3] = value & 0xFF;
+    dest[2] = *(++ptr);
+    dest[3] = *(++ptr);
 }
 
 void get4byteFromCharArray(int *dest, char *from) {
     char *ptr = (char*)(dest);
 
-    ptr[3] = *from;
-    ptr[2] = *(++from);
+    ptr[0] = *from;
     ptr[1] = *(++from);
-    ptr[0] = *(++from);
+    ptr[2] = *(++from);
+    ptr[3] = *(++from);
 
     *dest = *((int*)ptr);
-    // *dest = (int)((unsigned char)(from[0]) << 24 |
-    //             (unsigned char)(from[1]) << 16 |
-    //             (unsigned char)(from[2]) << 8 |
-    //             (unsigned char)(from[3]) );
 }
 
 void putMsglengthAndMsgType(int messageLength, MessageType msgType, char * message) {
@@ -663,15 +655,12 @@ void receiveReasonCode(int msgLength, char *message, int &reasonCode) {
 
 }
 
-void receiveNameAndArgTypeAndArgs(int msgLength, char *message, char *name, int *argTypes, void **args) {
+void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes) {
     // extract name
     memcpy(name, message + 8, 64);
 
     // extract argType
-    int argTypesLength = (msgLength - 8 - 64 + 4) / 2;
+    int argTypesLength = getMessageSize(name, argTypes) - 64;
+    cout << "argTypesLength=" << argTypesLength << endl;
     memcpy(argTypes, message + 72, argTypesLength);
-
-    // extract args
-    int argsLength = argTypesLength - 4;
-    memcpy(args, message + 72 + argTypesLength, argsLength);
 }

@@ -200,7 +200,7 @@ int rpcExecute() {
             cout << "?!?!?#?!@#?!?@#" << endl;
         }
 
-        receiveNameAndArgTypeAndArgs(msgLength, message, name, argTypes, args);
+        receiveNameAndArgTypeForRPCCall(message, name, argTypes);
 
         cout << "DEBUG:::: Length is " << msgLength << endl;
 
