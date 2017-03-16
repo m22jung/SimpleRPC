@@ -218,8 +218,6 @@ void get4byteFromCharArray(int *dest, char *from) {
     ptr[1] = *(++from);
     ptr[2] = *(++from);
     ptr[3] = *(++from);
-
-    *dest = *((int*)ptr);
 }
 
 void putMsglengthAndMsgType(int messageLength, MessageType msgType, char * message) {
