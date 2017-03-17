@@ -218,7 +218,8 @@ int rpcExecute() {
             // run function skeleton
             cout << "execute function skeleton. fn_name=" << localDatabase[sameDataIndex]->name << endl;
 
-            int argslen = (msgLength - 8 - 64 - argTypeslen) / 4;
+            int argslen = (argTypeslen / 4) - 1;
+            cout << "ARG LEN IS " << argslen << endl;
             //void ** receivedArgs = (void**)malloc(argslen * sizeof(void*));
             void *receivedArgs[argslen];
             int unmarshallResult = unmarshallData(message + 8 + 64 + argTypeslen, argTypes, receivedArgs, argslen, true);

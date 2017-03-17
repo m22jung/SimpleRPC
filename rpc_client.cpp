@@ -228,7 +228,7 @@ int rpcCall(char* name, int* argTypes, void** args) {
     }
     argTypeslen -= 72;
 
-    int argslen = (length - 8 - 64 - argTypeslen) / 4;
+    int argslen = (argTypeslen / 4) - 1;
 
     switch(msgType) {
         case EXECUTE_SUCCESS:

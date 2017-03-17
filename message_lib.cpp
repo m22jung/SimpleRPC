@@ -518,7 +518,7 @@ int sendExecSuccessAfterFormatting(int socket, char *name, int *argTypes, void *
         if (temp == 0) break;
     }
 
-    char * msgPointer = msg + 8 + 64 + (argTypesLength * 4);
+    char * msgPointer = msg + 8 + 64 + argTypesSize;
 
     marshallData(msgPointer, argTypes, args, argTypesLength);
 
@@ -937,13 +937,13 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                 case ARG_LONG: // 4 byte
                     if (argType->arraysize == 0) {
                         longs = new long();
-                        char *ptr = (char*)(longs);
+                        char *ptr = (char *)(longs);
 
-                        ptr[3] = (*msgPointer >> 24) & 0xFF;
-                        ptr[2] = (*msgPointer >> 16) & 0xFF;
-                        ptr[1] = (*msgPointer >> 8) & 0xFF;
-                        ptr[0] = *msgPointer & 0xFF;
-                        msgPointer += 4;
+                        ptr[0] = *msgPointer;
+                        ptr[1] = *(++msgPointer);
+                        ptr[2] = *(++msgPointer);
+                        ptr[3] = *(++msgPointer);
+                        msgPointer += 1;
 
                         *longs = *((long*)ptr);
                         cout << *longs << " " << endl;
@@ -955,11 +955,11 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
 
                             char *ptr = (char*)(longs);
 
-                            ptr[3] = (msgPointer[j] >> 24) & 0xFF;
-                            ptr[2] = (msgPointer[j] >> 16) & 0xFF;
-                            ptr[1] = (msgPointer[j] >> 8) & 0xFF;
-                            ptr[0] = msgPointer[j] & 0xFF;
-                            msgPointer += 4;
+                            ptr[0] = *msgPointer;
+                            ptr[1] = *(++msgPointer);
+                            ptr[2] = *(++msgPointer);
+                            ptr[3] = *(++msgPointer);
+                            msgPointer += 1;
 
                             *longs = *((long*)ptr);
                             cout << *longs << " ";
@@ -1143,12 +1143,13 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                     if (argType->arraysize == 0) {
                         longs = (long *)args[i];
 
-                        char *ptr = (char*)(longs);
-                        ptr[3] = (*msgPointer >> 24) & 0xFF;
-                        ptr[2] = (*msgPointer >> 16) & 0xFF;
-                        ptr[1] = (*msgPointer >> 8) & 0xFF;
-                        ptr[0] = *msgPointer & 0xFF;
-                        msgPointer += 4;
+                        char *ptr = (char *)(longs);
+
+                        ptr[0] = *msgPointer;
+                        ptr[1] = *(++msgPointer);
+                        ptr[2] = *(++msgPointer);
+                        ptr[3] = *(++msgPointer);
+                        msgPointer += 1;
 
                         cout << *longs << " " << endl;
 
@@ -1157,11 +1158,11 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                         for (int j = 0; j < argType->arraysize; j++) {
                             char *ptr = (char*)(longs);
 
-                            ptr[3] = (msgPointer[j] >> 24) & 0xFF;
-                            ptr[2] = (msgPointer[j] >> 16) & 0xFF;
-                            ptr[1] = (msgPointer[j] >> 8) & 0xFF;
-                            ptr[0] = msgPointer[j] & 0xFF;
-                            msgPointer += 4;
+                            ptr[0] = *msgPointer;
+                            ptr[1] = *(++msgPointer);
+                            ptr[2] = *(++msgPointer);
+                            ptr[3] = *(++msgPointer);
+                            msgPointer += 1;
 
                             cout << *longs << " ";
 
