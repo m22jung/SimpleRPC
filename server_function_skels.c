@@ -3,7 +3,7 @@
 #include <string.h>
 
 int f0_Skel(int *argTypes, void **args) {
-  printf("~~~~~~~In function_skel f0~~~~~~~\n");
+  
   *(int *)args[0] = f0(*(int *)args[1], *(int *)args[2]);
   return 0;
 }

@@ -220,6 +220,7 @@ int main() {
                         cout << "TERMINATE" << endl;
                             for (int index = 0; index < socket_n; index++) {
                                 if (socket_connected[index].second) {
+                                    cout << "terminate sent to index = " << index << endl;
                                     sendTerminateAfterFormatting(socket_connected[index].first);
                                 }
                             }

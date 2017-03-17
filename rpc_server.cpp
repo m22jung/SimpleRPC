@@ -155,7 +155,7 @@ void *execute(void *arg) {
 
     if (read(newsockfd, message + 8, msgLength - 8) < 0) {
         cerr << "ERROR reading from socket" << endl;
-        pthread_exit(NULL);
+        pthread_exit(NULL   );
         //return; // READING_SOCKET_ERROR;
     }
     cout << "Second read of the message" << endl;
@@ -223,13 +223,12 @@ int rpcExecute() {
         return -1;
     }
 
-    FD_ZERO(&readfds); // reset readfds
-    FD_SET(sockfd_binder, &readfds);
-    FD_SET(sockfd_client, &readfds);
-    cout << "sockfd_binder=" << sockfd_binder << " sockfd_client=" << sockfd_client << endl;
-    maxfd = sockfd_client > sockfd_binder ? sockfd_client : sockfd_binder;
-
     while (true) { // for as many protocols
+        FD_ZERO(&readfds); // reset readfds
+        FD_SET(sockfd_binder, &readfds);
+        FD_SET(sockfd_client, &readfds);
+        maxfd = sockfd_client > sockfd_binder ? sockfd_client : sockfd_binder;
+
         if (select(maxfd + 1, &readfds, NULL, NULL, NULL) < 0) {
             cerr << "ERROR on select" << endl;
             continue;
