@@ -29,14 +29,14 @@ int createServerSocket(char * addr, int port) {
     server = gethostbyname(addr);
 
     if (server == NULL) {
-        cerr << "ERROR, no such host" << endl;
-        return -1;
+//        cerr << "ERROR, no such host" << endl;
+        return NO_HOST_FOUND;
     }
 
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket < 0) {
-        cerr << "ERROR opening socket" << endl;
-        return -1;
+//        cerr << "ERROR opening socket" << endl;
+        return SOCKET_OPENING_FAILED;
     }
 
     bzero((char *) &server_addr, sizeof(server_addr));
@@ -46,8 +46,8 @@ int createServerSocket(char * addr, int port) {
     server_addr.sin_port = htons(port);
 
     if (connect(serverSocket,(struct sockaddr *) &server_addr,sizeof(server_addr)) < 0) {
-        cerr << "ERROR connecting" << endl;
-        return -1;
+//        cerr << "ERROR connecting" << endl;
+        return SOCKET_CONNECTION_FAILED;
     }
 
     return serverSocket;

@@ -209,7 +209,7 @@ int main() {
 
                                 if (databaseGlobalIndex == originalIndex) { // fail function doesn't exist
 //                                    cout << "one full loop done" << endl;
-                                    sendLocFailureAfterFormatting(fd, FUNCTION_LOCATION_DOES_NOT_EXIST);
+                                    sendLocFailureAfterFormatting(fd, FUNCTION_LOCATION_DOES_NOT_EXIST_IN_THIS_BINDER);
                                     searching = false;
                                 }
                             }

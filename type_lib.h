@@ -10,6 +10,9 @@
 using namespace std;
 
 enum ErrorCode {
+    REG_SUCCESS_NEW_SERVER = 1,
+    REG_SUCCESS_EXISTING_SERVER = 2,
+    REG_SAME_FUNCTION_EXIST = 3,
     FAILURE = -1,
     BINDER_ADDR_NOT_FOUND = -2,
     BINDER_PORT_NOT_FOUND = -3,
@@ -17,39 +20,15 @@ enum ErrorCode {
     SERVER_SOCKET_NOT_SETUP = -5,
     SOCKET_NOT_SETUP = -6,
     SOCKET_CONNECTION_FAILED = -7,
-    DATA_SEND_FAILED = -8,
-    READING_SOCKET_ERROR = -9,
-    SOCKET_CONNECTION_FINISHED = -10,
-    FUNCTION_SKELETON_DOES_NOT_EXIST_IN_THIS_SERVER = -11,
-    FUNCTION_LOCATION_DOES_NOT_EXIST = -12,
-    REG_SUCCESS_NEW_SERVER = 1,
-    REG_SUCCESS_EXISTING_SERVER = 2,
-    REG_SAME_FUNCTION_EXIST = 3,
-    REG_FAILURE = -15,
-    NO_HOST_FOUND = -16,
-    SOCKET_OPENING_FAILED = -17,
-    ERROR_ON_LEASON = -18
+    SOCKET_CONNECTION_FINISHED = -8,
+    SOCKET_OPENING_FAILED = -9,
+    DATA_SEND_FAILED = -10,
+    READING_SOCKET_ERROR = -11,
+    FUNCTION_SKELETON_DOES_NOT_EXIST_IN_THIS_SERVER = -12,
+    FUNCTION_LOCATION_DOES_NOT_EXIST_IN_THIS_BINDER= -13,
+    NO_HOST_FOUND = -14,
+    ERROR_ON_LEASON = -15
 
-};
-
-struct server_identifier {
-    string hostName;
-    int portNum;
-
-    server_identifier(string hostName_in, int portNum_in) {
-        hostName = hostName_in;
-        portNum = portNum_in;
-    }
-};
-
-struct client_identifier {
-    string hostName;
-    int portNum;
-
-    client_identifier(string hostName_in, int portNum_in) {
-        hostName = hostName_in;
-        portNum = portNum_in;
-    }
 };
 
 #endif //A03_TYPE_LIB_H
