@@ -128,6 +128,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 		} else { // replace function skeleton
 //			cout << "\nSame function added (replace function skeleton)" << endl;
 			localDatabase[sameDataIndex]->f = f;
+            matchingFs[sameDataIndex] = f;
 		}
 //		cout << endl;
 
@@ -208,6 +209,7 @@ void *execute(void *arg) {
 //            cout << "Sent Exec Success Msg" << endl;
         } else {
 //            cout << "called function skelResult = " << skelResult << endl;
+            sendExecFailureAfterFormatting(newsockfd, skelResult);
         }
     }
     close( newsockfd );
