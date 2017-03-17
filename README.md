@@ -13,7 +13,7 @@ Implement a crude version of Remote Procedure Call.
 1. make to get librpc.a and binder executable in the linux.student.cs environment.
 2. Prepare 'perfect' client and server source files.
 3. `g++ -L. client.o -lrpc -o client` for compiling client.
-4. `g++ -L. server_functions.o server_function_skels.o server.o -lrpc -o server` for compiling server.
+4. `g++ -L. server_functions.o server_function_skels.o server.o -lrpc -pthread -o server` for compiling server.
 5. `./binder`
 6. Manually set the `BINDER_ADDRESS` and `BINDER_PORT` environment variables on the client and server machines.
 7. `./server` and `./client` to run server(s) and client(s). Note that the binder, client, and server may be running on different machines.
