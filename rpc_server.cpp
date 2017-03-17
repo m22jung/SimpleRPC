@@ -216,17 +216,28 @@ int rpcExecute() {
             // run function skeleton
             cout << "execute function skeleton. fn_name=" << localDatabase[sameDataIndex]->name << endl;
 
-            int argslen = msgLength - 8 - 64 - argTypeslen;
-            void ** receivedArgs = (void**)malloc(argslen * sizeof(void*));
-            int unmarshallResult = unmarshallData(message + 8 + 64 + argTypeslen, argTypes, receivedArgs, argTypeslen, true);
+            int argslen = (msgLength - 8 - 64 - argTypeslen) / 4;
+            //void ** receivedArgs = (void**)malloc(argslen * sizeof(void*));
+            void *receivedArgs[argslen];
+            int unmarshallResult = unmarshallData(message + 8 + 64 + argTypeslen, argTypes, receivedArgs, argslen, true);
+            
+            cout << "In receivedArgs:" << endl;
+            for (int k=0; k > argslen; ++k) {
+                cout << "receivedArgs" << k << " = " << (int*)receivedArgs[k] << endl;
+            }
+
             if (unmarshallResult != 0) {
                 cout << "UNMARSHALL FAILED" << endl;
             }
 
-            localDatabase[sameDataIndex]->f(argTypes, receivedArgs);
-            cout << "Returned result from f_skel: " << (int *)receivedArgs[0] << endl;
-            sendExecSuccessAfterFormatting(newsockfd, name, argTypes, receivedArgs);
-            cout << "Sent Exec Success Msg" << endl;
+            int skelResult = localDatabase[sameDataIndex]->f(argTypes, receivedArgs);
+            if (skelResult == 0) {
+                cout << "Returned result from f_skel: " << (int *)receivedArgs[0] << endl;
+                sendExecSuccessAfterFormatting(newsockfd, name, argTypes, receivedArgs);
+                cout << "Sent Exec Success Msg" << endl;
+            } else {
+                cout << "called function skelResult = " << skelResult << endl;
+            }
         }
         close( newsockfd );
     } // while

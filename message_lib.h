@@ -69,7 +69,7 @@ void receiveServerIdentifierAndPort(int msgLength, char * message, char * server
 void receiveReasonCode(int msgLength, char * message, int &reasonCode);
 void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes, int argTypesLength);
 int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLength);
-int unmarshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLength, bool allocateMemory);
+int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen, bool allocateMemory);
 
 
 

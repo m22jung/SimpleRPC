@@ -1,0 +1,8 @@
+#!/bin/bash
+make clean
+rm server client
+make
+g++ -c client1.c
+g++ -c server_functions.c server_function_skels.c server.c
+g++ -L. client1.o -lrpc -o client
+g++ -L. server_functions.o server_function_skels.o server.o -lrpc -o server
