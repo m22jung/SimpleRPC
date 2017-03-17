@@ -1384,3 +1384,20 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
 //    cout << "=========END UNMARSHALLING==========" << endl;
     return 0;
 } // end of function
+
+int freeAllMemory(char * bufferPointer, int argTypes[], void * args[], unsigned int argTypesLength) {
+    std::vector< argT* > argTypeVector;
+
+    generateArgTvector(argTypes, argTypeVector);
+
+    for(int i = 0; i < argTypesLength - 1; i++) {
+        int length = argTypeVector[i]->arraysize;
+        if(length==0) {
+            delete args[i];
+        }
+        else {
+            delete [] args[i];
+        }
+    }
+    return 0;
+}

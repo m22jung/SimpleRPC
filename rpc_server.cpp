@@ -212,6 +212,7 @@ void *execute(void *arg) {
 //            cout << "called function skelResult = " << skelResult << endl;
             sendExecFailureAfterFormatting(newsockfd, skelResult);
         }
+        freeAllMemory(message, argTypes, receivedArgs, argTypeslen);
     }
     close( newsockfd );
 }
