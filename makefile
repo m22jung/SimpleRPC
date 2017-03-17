@@ -1,5 +1,5 @@
 CXX = g++				# compiler
-CXXFLAGS = -std=c++11   # compiler flags
+CXXFLAGS = -std=c++11 -pthread  # compiler flags
 
 OBJECTS1 = binder.o message_lib.o argT.o skeletonData.o functionData.o serverData.o
 EXEC1 = binder
