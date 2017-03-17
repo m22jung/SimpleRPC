@@ -126,25 +126,24 @@ int main() {
                 } else {
 //                    cout << "Length: " << len << ", TYPE: " << type << endl;
 
-                    char *message = new char[len];
+                    char message[len];
 
                     if (read(fd, message + 8, len - 8) < 0) {
 //                        cerr << "ERROR reading from socket" << endl;
                         goto begin;
                     }
 
-                    char *server_identifier = new char[1024];
+                    char server_identifier[1024];
                     int port;
-                    char *name = new char[64];
+                    char name[64];
                     int argTypeslen;
-                    int *argTypes;
                     int receiveResult;
                     int sameServerIndex;
 
                     if (type == REGISTER) {
 //                            cout << "REGISTER" << endl;
                             argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
-                            argTypes = new int[argTypeslen];
+                            int argTypes[argTypeslen];
                             socket_connected[i].second = true;
 
                             receiveServerIdentifierAndPortAndNameAndArgType(len, message, server_identifier, port, name, argTypes);
@@ -176,12 +175,15 @@ int main() {
                                 }
                             }
 
-                            delete[]argTypes;
-
                     } else if (type == LOC_REQUEST) {
 //                        cout << "LOC_REQUEST" << endl;
+                        if (database.size() == 0) { // client called before any server
+                            sendLocFailureAfterFormatting(fd, FUNCTION_LOCATION_DOES_NOT_EXIST_IN_THIS_BINDER);
+                            continue;
+                        }
+
                         argTypeslen = (len - 8 - 64) / 4;
-                        argTypes = new int[argTypeslen];
+                        int argTypes[argTypeslen];
 
                         receiveNameAndArgType(len, message, name, argTypes);
 
@@ -214,20 +216,23 @@ int main() {
                                 }
                             }
                         }
-                        delete [] argTypes;
+                        delete searchingFunction;
 
                     } else if (type == TERMINATE) {
-//                        cout << "TERMINATE" << endl;
-                            for (int index = 0; index < socket_n; index++) {
-                                if (socket_connected[index].second) {
+//                      cout << "TERMINATE" << endl;
+                        for (int index = 0; index < socket_n; index++) {
+                            if (socket_connected[index].second) {
 //                                    cout << "terminate sent to index = " << index << endl;
-                                    sendTerminateAfterFormatting(socket_connected[index].first);
-                                }
+                                sendTerminateAfterFormatting(socket_connected[index].first);
                             }
-                            flag_terminate = true;
+                        }
+
+                        for (int l = 0; l < database.size(); ++l) {
+                            delete database[l];
+                        }
+                        flag_terminate = true;
                     }
-                    delete[] message;
-                }
+                } // else
             } // if
         } // for
 //        cout << endl;

@@ -118,6 +118,10 @@ int matchingArgT(char* name, int *argTypes, std::vector<SkeletonData*> *database
         break;
     }
 
+    for (int i = 0; i < vsize; ++i) {
+        delete v[i];
+    }
+
     return sameDataIndex;
 }
 
@@ -421,6 +425,9 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
         }
     }
 //    cout << "msg Size from client before sending is " << msgSize << endl;
+    for (int i = 0; i < argTypeVector.size(); ++i) {
+        delete argTypeVector[i];
+    }
 
     char msg[msgSize];
     putMsglengthAndMsgType(msgSize, EXECUTE, msg);
@@ -500,6 +507,9 @@ int sendExecSuccessAfterFormatting(int socket, char *name, int *argTypes, void *
         }
     }
 //    cout << "msg Size from client before sending is " << msgSize << endl;
+    for (int i = 0; i < argTypeVector.size(); ++i) {
+        delete argTypeVector[i];
+    }
 
     char msg[msgSize];
     putMsglengthAndMsgType(msgSize, EXECUTE_SUCCESS, msg);
@@ -936,6 +946,10 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
         } // switch
 
     } // for
+
+    for (int i = 0; i < argTypeVector.size(); ++i) {
+        delete argTypeVector[i];
+    }
 //    cout << "--------marshaling end---------" << endl;
 }
 
@@ -1363,6 +1377,10 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
             } // switch
         } // else
     } // for
+
+    for (int i = 0; i < argTypeVector.size(); ++i) {
+        delete argTypeVector[i];
+    }
 //    cout << "=========END UNMARSHALLING==========" << endl;
     return 0;
 } // end of function

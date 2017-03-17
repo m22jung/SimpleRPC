@@ -164,12 +164,12 @@ int rpcCall(char* name, int* argTypes, void** args) {
 
     // Depending on the type, handle differently
 
-    char *message = new char[length];
+    char message[length];
     if (read(binderSocket, message + 8, length - 8) < 0) {
         return READING_SOCKET_ERROR;
     }
 
-    char *server_identifier = new char[1024];
+    char server_identifier[1024];
     int port;
     int reasonCode = 0;
     switch(msgType) {
@@ -182,7 +182,6 @@ int rpcCall(char* name, int* argTypes, void** args) {
             receiveReasonCode(length, message, reasonCode);
             // extract reason code,return it
     }
-    delete [] message;
 
     if (reasonCode != 0) {
         return reasonCode;
@@ -215,15 +214,15 @@ int rpcCall(char* name, int* argTypes, void** args) {
         return extractLengthAndTypeResult;
     }
 
-    message = new char[length];
-    if (read(serverSocket, message + 8, length - 8) < 0) {
+    char message2[length];
+    if (read(serverSocket, message2 + 8, length - 8) < 0) {
         return READING_SOCKET_ERROR;
     }
 
     int argTypeslen = 72;
     for (;;) {
         int temp;
-        get4byteFromCharArray(&temp, message + argTypeslen);
+        get4byteFromCharArray(&temp, message2 + argTypeslen);
         argTypeslen += 4;
         if (temp == 0) break;
     }
@@ -234,14 +233,13 @@ int rpcCall(char* name, int* argTypes, void** args) {
     switch(msgType) {
         case EXECUTE_SUCCESS:
 //            cout << "got EXECUTE_SUCCESS message" << endl;
-            unmarshallData(message + 8 + 64 + argTypeslen, argTypes, args, argslen, false);
+            unmarshallData(message2 + 8 + 64 + argTypeslen, argTypes, args, argslen, false);
             break;
         case EXECUTE_FAILURE:
 //            cout << "got EXECUTE_FAILURE message" << endl;
-            receiveReasonCode(length, message, reasonCode);
+            receiveReasonCode(length, message2, reasonCode);
             break;
     }
-    delete [] message;
 
     close(serverSocket);
 
