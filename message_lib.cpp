@@ -745,7 +745,24 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
 //                    cout << *ints << " " << endl;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
-                        put4byteToCharArray(msgPointer, ints[j]);
+                        if (argType->input && argType->output) {
+                            put4byteToCharArray(msgPointer, ints[j]);
+//                            cout << ints[j] << " ";
+                        }
+                        else if (argType->input) {
+                            put4byteToCharArray(msgPointer, ints[j]);
+//                            cout << ints[j] << " ";
+                        } else if (argType->output) {
+                            if (fromClient) {
+//                                cout << " ";
+                                // do nothing
+                            } else {
+                                put4byteToCharArray(msgPointer, ints[j]);
+
+//                                cout << ints[j] << " ";
+                            }
+                        }
+
                         msgPointer += 4;
 //                        cout << ints[j] << " ";
                     } //cout << endl;
