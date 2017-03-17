@@ -218,10 +218,22 @@ int rpcCall(char* name, int* argTypes, void** args) {
     if (read(serverSocket, message + 8, length - 8) < 0) {
         return READING_SOCKET_ERROR;
     }
+
+    int argTypeslen = 72;
+    for (;;) {
+        int temp;
+        get4byteFromCharArray(&temp, message + argTypeslen);
+        argTypeslen += 4;
+        if (temp == 0) break;
+    }
+    argTypeslen -= 72;
+
+    int argslen = (length - 8 - 64 - argTypeslen) / 4;
+
     switch(msgType) {
         case EXECUTE_SUCCESS:
             cout << "got EXECUTE_SUCCESS message" << endl;
-            //receiveNameAndArgTypeAndArgs(length, message, name, argTypes, args);
+            unmarshallData(message + 8 + 64 + argTypeslen, argTypes, args, argslen, false);
             break;
         case EXECUTE_FAILURE:
             cout << "got EXECUTE_FAILURE message" << endl;

@@ -18,6 +18,7 @@
 using namespace std;
 
 vector<SkeletonData*> localDatabase;
+vector<skeleton> matchingFs;
 int sockfd_client, sockfd_binder, port;
 struct sockaddr_in binder_addr, address;
 socklen_t addrlen;
@@ -122,6 +123,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 		if (sameDataIndex == -1) { // add new SkeletonData
 			cout << "\nFunction skeleton added:" << endl;
 			localDatabase.push_back(new SkeletonData(name, argTypes, f));
+            matchingFs.push_back(f);
 		} else { // replace function skeleton
 			cout << "\nSame function added (replace function skeleton)" << endl;
 			localDatabase[sameDataIndex]->f = f;
@@ -222,17 +224,17 @@ int rpcExecute() {
             int unmarshallResult = unmarshallData(message + 8 + 64 + argTypeslen, argTypes, receivedArgs, argslen, true);
             
             cout << "In receivedArgs:" << endl;
-            for (int k=0; k > argslen; ++k) {
+            for (int k=0; k < argslen; ++k) {
                 cout << "receivedArgs" << k << " = " << (int*)receivedArgs[k] << endl;
             }
 
             if (unmarshallResult != 0) {
                 cout << "UNMARSHALL FAILED" << endl;
             }
-
-            int skelResult = localDatabase[sameDataIndex]->f(argTypes, receivedArgs);
+            int skelResult = matchingFs[sameDataIndex](argTypes, receivedArgs);
+//            int skelResult = localDatabase[sameDataIndex]->f(argTypes, receivedArgs);
             if (skelResult == 0) {
-                cout << "Returned result from f_skel: " << (int *)receivedArgs[0] << endl;
+                cout << "Returned result from f_skel: " << *(int *)receivedArgs[0] << endl;
                 sendExecSuccessAfterFormatting(newsockfd, name, argTypes, receivedArgs);
                 cout << "Sent Exec Success Msg" << endl;
             } else {
