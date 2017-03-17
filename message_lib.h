@@ -68,7 +68,7 @@ int receiveRegisterResult(int socket, int &msgType, int &reasonCode);
 void receiveServerIdentifierAndPort(int msgLength, char * message, char * server_identifier, int &port);
 void receiveReasonCode(int msgLength, char * message, int &reasonCode);
 void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes, int argTypesLength);
-int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLength);
+int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLength, bool fromClient);
 int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen, bool allocateMemory);
 
 
