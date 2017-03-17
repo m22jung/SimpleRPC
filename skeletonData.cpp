@@ -7,7 +7,7 @@
 SkeletonData::SkeletonData(char *n, int *argTypes, skeleton f) : f(f) {
     memcpy(name, n, 64);
     name[64] = '\0';
-    printf("SkeletonData::name = %s\n", name);
+//    printf("SkeletonData::name = %s\n", name);
 
     generateArgTvector(argTypes, argTv);
     num_argTv = argTv.size();

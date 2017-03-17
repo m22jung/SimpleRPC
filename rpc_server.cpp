@@ -45,9 +45,9 @@ int rpcInit() {
     address.sin_addr.s_addr = INADDR_ANY;
 
     if ( bind(sockfd_client, (struct sockaddr *) &address, addrlen) < 0) {
-        cerr << "ERROR on binding" << endl;
+//        cerr << "ERROR on binding" << endl;
         close(sockfd_client);
-        return -1;
+        return BINDER_NOT_SETUP;
     }
 
     getsockname(sockfd_client, (struct sockaddr *) &address, &addrlen);
@@ -56,32 +56,32 @@ int rpcInit() {
 
     gethostname(SERVER_ADDRESS, 1024);
     
-    printf("SERVER_ADDRESS %s\n", SERVER_ADDRESS);
-    cout << "SERVER_PORT " << SERVER_PORT << endl;
+//    printf("SERVER_ADDRESS %s\n", SERVER_ADDRESS);
+//    cout << "SERVER_PORT " << SERVER_PORT << endl;
 
     // open connection to binder
     char *BINDER_PORT = getenv("BINDER_PORT");
     if (BINDER_PORT == NULL) {
-        cerr << "ERROR, BINDER_PORT does not exist" << endl;
-        return -1;
+//        cerr << "ERROR, BINDER_PORT does not exist" << endl;
+        return BINDER_PORT_NOT_FOUND;
     }
     binder_port = atoi(BINDER_PORT);
     
     char *BINDER_ADDRESS = getenv("BINDER_ADDRESS");
     if (BINDER_ADDRESS == NULL) {
-        cerr << "ERROR, BINDER_ADDRESS does not exist" << endl;
-        return -1;
+//        cerr << "ERROR, BINDER_ADDRESS does not exist" << endl;
+        return BINDER_ADDR_NOT_FOUND;
     }
     binder = gethostbyname( BINDER_ADDRESS );
     if (binder == NULL) {
-        cerr << "ERROR, no such host" << endl;
-        return -1;
+//        cerr << "ERROR, no such host" << endl;
+        return NO_HOST_FOUND;
     }
     
     sockfd_binder = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd_binder < 0) {
-        cerr << "ERROR opening socket" << endl;
-        return -1;
+//        cerr << "ERROR opening socket" << endl;
+        return SOCKET_OPENING_FAILED;
     }
 
     bzero((char *) &binder_addr, sizeof(binder_addr));
@@ -91,8 +91,8 @@ int rpcInit() {
     binder_addr.sin_port = htons(binder_port);
 
     if (connect(sockfd_binder,(struct sockaddr *) &binder_addr,sizeof(binder_addr)) < 0) {
-        cerr << "ERROR connecting" << endl;
-        return -1;
+//        cerr << "ERROR connecting" << endl;
+        return SOCKET_CONNECTION_FAILED;
     }
 
     return 0;
@@ -103,36 +103,36 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 	// list of argument type is avaliable at the server.
 
 	int result = sendRegRequestAfterFormatting(sockfd_binder, SERVER_ADDRESS, port, name, argTypes);
-	cout << "rpcRegister Request result = " << result << endl;
+//	cout << "rpcRegister Request result = " << result << endl;
 	if (result < 0) {
-		cout << "negative result on resgister request" << endl;
+//		cout << "negative result on resgister request" << endl;
 		return result;
 	}
 
 	int msgType, returnCode;
     result = receiveRegisterResult(sockfd_binder, msgType, returnCode);
     if (result < 0) {
-        cout << "negative result on receive register result" << endl;
+//        cout << "negative result on receive register result" << endl;
         return result;
     }
 
     if (msgType == REGISTER_SUCCESS) {
-    	cout << "REGISTER_SUCCESS received, returnCode=" << returnCode << endl;
+//    	cout << "REGISTER_SUCCESS received, returnCode=" << returnCode << endl;
 
     	int sameDataIndex = matchingArgT(name, argTypes, &localDatabase);
 		
 		if (sameDataIndex == -1) { // add new SkeletonData
-			cout << "\nFunction skeleton added:" << endl;
+//			cout << "\nFunction skeleton added:" << endl;
 			localDatabase.push_back(new SkeletonData(name, argTypes, f));
             matchingFs.push_back(f);
 		} else { // replace function skeleton
-			cout << "\nSame function added (replace function skeleton)" << endl;
+//			cout << "\nSame function added (replace function skeleton)" << endl;
 			localDatabase[sameDataIndex]->f = f;
 		}
-		cout << endl;
+//		cout << endl;
 
     } else {
-    	cout << "####REGISTER_FAILURE#### returnCode=" << returnCode << endl; 
+//    	cout << "####REGISTER_FAILURE#### returnCode=" << returnCode << endl;
     }
 
 	return result;
@@ -145,27 +145,27 @@ void *execute(void *arg) {
     // read client call
     int result = receiveLengthAndType(newsockfd, msgLength, msgType);
     if (result < 0) {
-        cout << "ERROR on read, returnCode=" << result << endl;
+//        cout << "ERROR on read, returnCode=" << result << endl;
         pthread_exit(NULL);
         //return; // result;
     }
 
     char message[msgLength];
-    cout << "rpcCall message length = " << msgLength << endl;
+//    cout << "rpcCall message length = " << msgLength << endl;
 
     if (read(newsockfd, message + 8, msgLength - 8) < 0) {
-        cerr << "ERROR reading from socket" << endl;
+//        cerr << "ERROR reading from socket" << endl;
         pthread_exit(NULL   );
         //return; // READING_SOCKET_ERROR;
     }
-    cout << "Second read of the message" << endl;
+//    cout << "Second read of the message" << endl;
 
     char name[64];
     int argTypeslen = 72;
     for (;;) {
         int temp;
         get4byteFromCharArray(&temp, message + argTypeslen);
-        cout << "pointer=" << argTypeslen << " temp=" << temp << endl;
+//        cout << "pointer=" << argTypeslen << " temp=" << temp << endl;
         argTypeslen += 4;
         if (temp == 0) break;
     }
@@ -174,53 +174,53 @@ void *execute(void *arg) {
     int argTypes[argTypeslen];
     receiveNameAndArgTypeForRPCCall(message, name, argTypes, argTypeslen);
 
-    cout << "DEBUG:::: Length is " << msgLength << endl;
+//    cout << "DEBUG:::: Length is " << msgLength << endl;
 
     int sameDataIndex = matchingArgT(name, argTypes, &localDatabase); // search database
 
     if (sameDataIndex == -1) { // skeleton doesn't exist in this server. return error
-        cout << "could not find called function" << endl;
+//        cout << "could not find called function" << endl;
         sendExecFailureAfterFormatting(newsockfd, FUNCTION_SKELETON_DOES_NOT_EXIST_IN_THIS_SERVER);
     } else {
         // run function skeleton
-        cout << "execute function skeleton. fn_name=" << localDatabase[sameDataIndex]->name << endl;
+//        cout << "execute function skeleton. fn_name=" << localDatabase[sameDataIndex]->name << endl;
 
         int argslen = (argTypeslen / 4) - 1;
-        cout << "ARG LEN IS " << argslen << endl;
+//        cout << "ARG LEN IS " << argslen << endl;
         //void ** receivedArgs = (void**)malloc(argslen * sizeof(void*));
         void *receivedArgs[argslen];
         int unmarshallResult = unmarshallData(message + 8 + 64 + argTypeslen, argTypes, receivedArgs, argslen, true);
         
-        cout << "In receivedArgs:" << endl;
+//        cout << "In receivedArgs:" << endl;
         for (int k=0; k < argslen; ++k) {
-            cout << "receivedArgs" << k << " = " << (int*)receivedArgs[k] << endl;
+//            cout << "receivedArgs" << k << " = " << (int*)receivedArgs[k] << endl;
         }
 
         if (unmarshallResult != 0) {
-            cout << "UNMARSHALL FAILED" << endl;
+//            cout << "UNMARSHALL FAILED" << endl;
         }
         
         int skelResult = matchingFs[sameDataIndex](argTypes, receivedArgs);
 
         if (skelResult == 0) {
-            cout << "Returned result from f_skel: " << *(int *)receivedArgs[0] << endl;
+//            cout << "Returned result from f_skel: " << *(int *)receivedArgs[0] << endl;
             sendExecSuccessAfterFormatting(newsockfd, name, argTypes, receivedArgs);
-            cout << "Sent Exec Success Msg" << endl;
+//            cout << "Sent Exec Success Msg" << endl;
         } else {
-            cout << "called function skelResult = " << skelResult << endl;
+//            cout << "called function skelResult = " << skelResult << endl;
         }
     }
     close( newsockfd );
 }
 
 int rpcExecute() {
-    cout << "***rpcExecute***" << endl;
+//    cout << "***rpcExecute***" << endl;
     int maxfd, newsockfd;
     fd_set readfds;
 
     if ( listen(sockfd_client, SOMAXCONN) < 0 ) {
-        cerr << "ERROR on listen" << endl;
-        return -1;
+//        cerr << "ERROR on listen" << endl;
+        return ERROR_ON_LEASON;
     }
 
     while (true) { // for as many protocols
@@ -230,12 +230,12 @@ int rpcExecute() {
         maxfd = sockfd_client > sockfd_binder ? sockfd_client : sockfd_binder;
 
         if (select(maxfd + 1, &readfds, NULL, NULL, NULL) < 0) {
-            cerr << "ERROR on select" << endl;
+//            cerr << "ERROR on select" << endl;
             continue;
         }
 
         if (FD_ISSET(sockfd_binder, &readfds)) { // termination?
-            cout << "Termination received" << endl;
+//            cout << "Termination received" << endl;
 
             // wait untill all threads are finished
             for (map<int, pthread_t*>::iterator it = socket_connected.begin();
@@ -253,17 +253,17 @@ int rpcExecute() {
 
         // new rpcCall from a client
         if ((newsockfd = accept(sockfd_client, (struct sockaddr *) &address, (socklen_t *) &addrlen)) < 0) {
-            cerr << "ERROR on accept" << endl;
+//            cerr << "ERROR on accept" << endl;
             continue;
         }
-        cout << "Client accepted" << endl;
+//        cout << "Client accepted" << endl;
 
         // Create a new thread
         // newsockfd is closed in execute function
         socket_connected[newsockfd] = new pthread_t;
         int rc = pthread_create(socket_connected.find(newsockfd)->second, NULL, execute, 
                                 (void*) &(socket_connected.find(newsockfd)->first));
-        if (rc) cerr << "ERROR pthread" << endl;
+//        if (rc) cerr << "ERROR pthread" << endl;
         
     } // while
 

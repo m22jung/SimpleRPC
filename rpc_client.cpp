@@ -54,33 +54,34 @@ int createServerSocket(char * addr, int port) {
 }
 
 int createBinderSocket() {
-    cout << "creating binder socket " << endl;
+//    cout << "creating binder socket " << endl;
 
     int binder_port;
     struct sockaddr_in binder_addr;
     struct hostent *binder;
     char *BINDER_PORT = getenv("BINDER_PORT");
     if (BINDER_PORT == NULL) {
-        cerr << "ERROR, BINDER_PORT does not exist" << endl;
-        return -1;
+//        cerr << "ERROR, BINDER_PORT does not exist" << endl;
+
+        return BINDER_PORT_NOT_FOUND;
     }
     binder_port = atoi(BINDER_PORT);
 
     char *BINDER_ADDRESS = getenv("BINDER_ADDRESS");
     if (BINDER_ADDRESS == NULL) {
-        cerr << "ERROR, BINDER_ADDRESS does not exist" << endl;
-        return -1;
+//        cerr << "ERROR, BINDER_ADDRESS does not exist" << endl;
+        return BINDER_ADDR_NOT_FOUND;
     }
     binder = gethostbyname( BINDER_ADDRESS );
     if (binder == NULL) {
-        cerr << "ERROR, no such host" << endl;
-        return -1;
+//        cerr << "ERROR, no such host" << endl;
+        return NO_HOST_FOUND;
     }
 
     binderSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (binderSocket < 0) {
-        cerr << "ERROR opening socket" << endl;
-        return -1;
+//        cerr << "ERROR opening socket" << endl;
+        return SOCKET_OPENING_FAILED;
     }
 
     bzero((char *) &binder_addr, sizeof(binder_addr));
@@ -90,8 +91,8 @@ int createBinderSocket() {
     binder_addr.sin_port = htons(binder_port);
 
     if (connect(binderSocket,(struct sockaddr *) &binder_addr,sizeof(binder_addr)) < 0) {
-        cerr << "ERROR connecting" << endl;
-        return -1;
+//        cerr << "ERROR connecting" << endl;
+        return SOCKET_CONNECTION_FAILED;
     }
 
     return 0;
@@ -187,12 +188,12 @@ int rpcCall(char* name, int* argTypes, void** args) {
         return reasonCode;
     }
 
-    cout << "Received Server id = " << server_identifier << endl;
-    cout << "Received port = " << port << endl;
+//    cout << "Received Server id = " << server_identifier << endl;
+//    cout << "Received port = " << port << endl;
 
     //then send execute-req msg to the server
     int serverSocket = createServerSocket(server_identifier, port);
-    cout << "Server socket created" << endl;
+//    cout << "Server socket created" << endl;
 
     if (serverSocket < 0) {
         return SERVER_SOCKET_NOT_SETUP;
@@ -200,14 +201,14 @@ int rpcCall(char* name, int* argTypes, void** args) {
 
     int sendresult = sendExecuteRequestMessage(serverSocket, name, argTypes, args);
     if (sendresult < 0) {
-        cout << "send failed DATA_SEND_FAILED" << endl;
+//        cout << "send failed DATA_SEND_FAILED" << endl;
         return sendresult;
     }
-    cout << "Message sent to server" << endl;
+//    cout << "Message sent to server" << endl;
 
     //TODO: Handle response from the server
     extractLengthAndTypeResult = receiveLengthAndType(serverSocket, length, msgType);
-    cout << "Message received from server" << endl;
+//    cout << "Message received from server" << endl;
 
     if (extractLengthAndTypeResult < 0) {
         // error
@@ -232,11 +233,11 @@ int rpcCall(char* name, int* argTypes, void** args) {
 
     switch(msgType) {
         case EXECUTE_SUCCESS:
-            cout << "got EXECUTE_SUCCESS message" << endl;
+//            cout << "got EXECUTE_SUCCESS message" << endl;
             unmarshallData(message + 8 + 64 + argTypeslen, argTypes, args, argslen, false);
             break;
         case EXECUTE_FAILURE:
-            cout << "got EXECUTE_FAILURE message" << endl;
+//            cout << "got EXECUTE_FAILURE message" << endl;
             receiveReasonCode(length, message, reasonCode);
             break;
     }

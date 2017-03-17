@@ -24,7 +24,7 @@ void setup(int *sockfd, struct sockaddr_in *address) {
 
     *sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (*sockfd < 0) {
-        cerr << "ERROR opening socket" << endl;
+//        cerr << "ERROR opening socket" << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -33,7 +33,7 @@ void setup(int *sockfd, struct sockaddr_in *address) {
     address->sin_addr.s_addr = INADDR_ANY;
 
     if (bind(*sockfd, (struct sockaddr *) address, addrlen) < 0) {
-        cerr << "ERROR on binding" << endl;
+//        cerr << "ERROR on binding" << endl;
         close(*sockfd);
         exit(EXIT_FAILURE);
     }
@@ -75,7 +75,7 @@ int main() {
     setup(&sockfd, &address); // opens and binds socket, prints address and port number
 
     if (listen(sockfd, SOMAXCONN) < 0) {
-        cerr << "ERROR on listen" << endl;
+//        cerr << "ERROR on listen" << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -88,7 +88,7 @@ int main() {
         FD_SET(sockfd, &readfds);
         maxfd = sockfd;
         socket_n = socket_connected.size();
-        cout << "socket_n: " << socket_n << endl;
+//        cout << "socket_n: " << socket_n << endl;
 
         for (int i = 0; i < socket_n; ++i) { // set readfds
             fd = socket_connected[i].first;
@@ -97,13 +97,13 @@ int main() {
         }
 
         if (select(maxfd + 1, &readfds, NULL, NULL, NULL) < 0) {
-            cerr << "ERROR on select" << endl;
+//            cerr << "ERROR on select" << endl;
             continue;
         }
 
         if (FD_ISSET(sockfd, &readfds)) { // New connection
             if ((newsockfd = accept(sockfd, (struct sockaddr *) &address, (socklen_t *) &addrlen)) < 0) {
-                cerr << "ERROR on accept" << endl;
+//                cerr << "ERROR on accept" << endl;
                 continue;
             }
             socket_connected.push_back(make_pair(newsockfd, false));
@@ -113,23 +113,23 @@ int main() {
         for (int i = 0; i < socket_n; i++) { // Request
             fd = socket_connected[i].first;
             if (FD_ISSET(fd, &readfds)) {
-                cout << "-READ- ";
+//                cout << "-READ- ";
 
                 int len, type;
                 int receiveLengthAndTypeResult = receiveLengthAndType(fd, len, type);
                 if (receiveLengthAndTypeResult == SOCKET_CONNECTION_FINISHED) {
                     close(fd);
-                    cout << "fd=" << fd << " disconnected" << endl;
+//                    cout << "fd=" << fd << " disconnected" << endl;
                     socket_connected.erase(socket_connected.begin() + i);
                 } else if (receiveLengthAndTypeResult == READING_SOCKET_ERROR) {
                     goto begin;
                 } else {
-                    cout << "Length: " << len << ", TYPE: " << type << endl;
+//                    cout << "Length: " << len << ", TYPE: " << type << endl;
 
                     char *message = new char[len];
 
                     if (read(fd, message + 8, len - 8) < 0) {
-                        cerr << "ERROR reading from socket" << endl;
+//                        cerr << "ERROR reading from socket" << endl;
                         goto begin;
                     }
 
@@ -142,15 +142,15 @@ int main() {
                     int sameServerIndex;
 
                     if (type == REGISTER) {
-                            cout << "REGISTER" << endl;
+//                            cout << "REGISTER" << endl;
                             argTypeslen = (len - 8 - 1024 - 4 - 64) / 4;
                             argTypes = new int[argTypeslen];
                             socket_connected[i].second = true;
 
                             receiveServerIdentifierAndPortAndNameAndArgType(len, message, server_identifier, port, name, argTypes);
 
-                            printf("Server_ideitifier: %s", server_identifier);
-                            cout << " port: " << port << endl;
+//                            printf("Server_ideitifier: %s", server_identifier);
+//                            cout << " port: " << port << endl;
                             
                             // new FunctionData from REGISTER
                             FunctionData *fdata = new FunctionData(name, argTypes);
@@ -158,19 +158,19 @@ int main() {
                             // check if same server/port exists in database 
                             sameServerIndex = matchingServerPort(server_identifier, port, &database);
                             if (sameServerIndex == -1) {
-                                cout << "ServerData added" << endl;
+//                                cout << "ServerData added" << endl;
                                 database.push_back(new ServerData(server_identifier, port));
                                 (database.back())->addFunctionToList(fdata);
                                 sendRegSuccessAfterFormatting(fd, REG_SUCCESS_NEW_SERVER);
                             } else {
                                 // check if FunctionData is in function list
                                 if (database[sameServerIndex]->functionInList(fdata)) {
-                                    cout << "Same FunctionData exists in database" << endl;
+//                                    cout << "Same FunctionData exists in database" << endl;
                                     delete fdata;
                                     sendRegSuccessAfterFormatting(fd, REG_SAME_FUNCTION_EXIST);
                                 } else {
-                                    cout << "non-existing FunctionData added to server: ";
-                                    printf("%s port=%d\n", database[sameServerIndex]->hostname, database[sameServerIndex]->port);
+//                                    cout << "non-existing FunctionData added to server: ";
+//                                    printf("%s port=%d\n", database[sameServerIndex]->hostname, database[sameServerIndex]->port);
                                     database[sameServerIndex]->addFunctionToList(fdata);
                                     sendRegSuccessAfterFormatting(fd, REG_SUCCESS_EXISTING_SERVER);
                                 }
@@ -179,7 +179,7 @@ int main() {
                             delete[]argTypes;
 
                     } else if (type == LOC_REQUEST) {
-                        cout << "LOC_REQUEST" << endl;
+//                        cout << "LOC_REQUEST" << endl;
                         argTypeslen = (len - 8 - 64) / 4;
                         argTypes = new int[argTypeslen];
 
@@ -190,25 +190,25 @@ int main() {
 
                         FunctionData * searchingFunction = new FunctionData(name, argTypes);
                         while(searching) {
-                            cout << "Databse Index is " << databaseGlobalIndex << endl;
+//                            cout << "Databse Index is " << databaseGlobalIndex << endl;
 
                             if (database[databaseGlobalIndex]->functionInList(searchingFunction)) {
-                                cout << "Databse instance found" << endl;
+//                                cout << "Databse instance found" << endl;
                                 int logSuccessMsgResult = sendLocSuccessAfterFormatting(fd, database[databaseGlobalIndex]->hostname, database[databaseGlobalIndex]->port);
                                 if (logSuccessMsgResult < 0) {
-                                    cerr << "Sending Loc Success Msg Failed" << endl;
+//                                    cerr << "Sending Loc Success Msg Failed" << endl;
                                 }
                                 searching = false;
                             } else {
-                                cout << "Databse instance not found, iterate the pointer" << endl;
+//                                cout << "Databse instance not found, iterate the pointer" << endl;
                                 databaseGlobalIndex++;
                                 if (databaseGlobalIndex == database.size()) {
-                                    cout << "Going back to the start of the index" << endl;
+//                                    cout << "Going back to the start of the index" << endl;
                                     databaseGlobalIndex = databaseGlobalIndex % database.size();
                                 }
 
                                 if (databaseGlobalIndex == originalIndex) { // fail function doesn't exist
-                                    cout << "one full loop done" << endl;
+//                                    cout << "one full loop done" << endl;
                                     sendLocFailureAfterFormatting(fd, FUNCTION_LOCATION_DOES_NOT_EXIST);
                                     searching = false;
                                 }
@@ -217,10 +217,10 @@ int main() {
                         delete [] argTypes;
 
                     } else if (type == TERMINATE) {
-                        cout << "TERMINATE" << endl;
+//                        cout << "TERMINATE" << endl;
                             for (int index = 0; index < socket_n; index++) {
                                 if (socket_connected[index].second) {
-                                    cout << "terminate sent to index = " << index << endl;
+//                                    cout << "terminate sent to index = " << index << endl;
                                     sendTerminateAfterFormatting(socket_connected[index].first);
                                 }
                             }
@@ -230,6 +230,6 @@ int main() {
                 }
             } // if
         } // for
-        cout << endl;
+//        cout << endl;
     } // while
 } // main

@@ -21,7 +21,7 @@ void generateArgTvector(int *argTypes, vector< argT* > &v) {
         int type, arraysize;
 
         int io = (argTypes[i] >> ARG_OUTPUT) & 0x00000003;
-        cout << "int io=" << io;
+//        cout << "int io=" << io;
         switch (io) {
             case 3:
                 input = true;
@@ -38,10 +38,10 @@ void generateArgTvector(int *argTypes, vector< argT* > &v) {
         }
 
         type = (argTypes[i] >> 16) & 0x00000007;
-        cout << " type=" << type;
+//        cout << " type=" << type;
 
         arraysize = argTypes[i] & 0x0000FFFF;
-        cout << " arraysize=" << arraysize << endl;
+//        cout << " arraysize=" << arraysize << endl;
 
         v.push_back(new argT(input, output, type, arraysize));
     }
@@ -112,9 +112,9 @@ int matchingArgT(char* name, int *argTypes, std::vector<SkeletonData*> *database
         if (!flag_sameArg) continue; // move to next data
 
         sameDataIndex = i;
-        cout << "Function name=";
-        printf("%s, ", name);
-        cout << "matched at index=" << i << endl;
+//        cout << "Function name=";
+//        printf("%s, ", name);
+//        cout << "matched at index=" << i << endl;
         break;
     }
 
@@ -153,9 +153,9 @@ int matchingArgT(char* name, std::vector<argT*> *argv, std::vector<FunctionData*
         if (!flag_sameArg) continue; // move to next data
 
         sameDataIndex = i;
-        cout << "Function name=";
-        printf("%s, ", name);
-        cout << "matched at FunctionData index=" << i << endl;
+//        cout << "Function name=";
+//        printf("%s, ", name);
+//        cout << "matched at FunctionData index=" << i << endl;
         break;
     }
 
@@ -420,21 +420,21 @@ int sendExecRequestAfterFormatting(int socket, char* name, int* argTypes, void**
             }
         }
     }
-    cout << "msg Size from client before sending is " << msgSize << endl;
+//    cout << "msg Size from client before sending is " << msgSize << endl;
 
     char msg[msgSize];
     putMsglengthAndMsgType(msgSize, EXECUTE, msg);
 
     memcpy(msg + 8, name, 64);
 
-    cout << "argTypesSize=" << argTypesSize << endl;
+//    cout << "argTypesSize=" << argTypesSize << endl;
     memcpy(msg + 72, argTypes, argTypesSize);
 
     int argTypeslen = 72;
     for (;;) {
         int temp;
         get4byteFromCharArray(&temp, msg + argTypeslen);
-        cout << "pointer=" << argTypeslen << " temp=" << temp << endl;
+//        cout << "pointer=" << argTypeslen << " temp=" << temp << endl;
         argTypeslen += 4;
         if (temp == 0) break;
     }
@@ -499,21 +499,21 @@ int sendExecSuccessAfterFormatting(int socket, char *name, int *argTypes, void *
             }
         }
     }
-    cout << "msg Size from client before sending is " << msgSize << endl;
+//    cout << "msg Size from client before sending is " << msgSize << endl;
 
     char msg[msgSize];
     putMsglengthAndMsgType(msgSize, EXECUTE_SUCCESS, msg);
 
     memcpy(msg + 8, name, 64);
 
-    cout << "argTypesSize=" << argTypesSize << endl;
+//    cout << "argTypesSize=" << argTypesSize << endl;
     memcpy(msg + 72, argTypes, argTypesSize);
 
     int argTypeslen = 72;
     for (;;) {
         int temp;
         get4byteFromCharArray(&temp, msg + argTypeslen);
-        cout << "pointer=" << argTypeslen << " temp=" << temp << endl;
+//        cout << "pointer=" << argTypeslen << " temp=" << temp << endl;
         argTypeslen += 4;
         if (temp == 0) break;
     }
@@ -643,15 +643,15 @@ void receiveReasonCode(int msgLength, char *message, int &reasonCode) {
 void receiveNameAndArgTypeForRPCCall(char *message, char *name, int *argTypes, int argTypesLength) {
     // extract name
     memcpy(name, message + 8, 64);
-    cout << "function name=" << name << endl;
+//    cout << "function name=" << name << endl;
 
     // extract argType
-    cout << "argTypesLength=" << argTypesLength << endl;
+//    cout << "argTypesLength=" << argTypesLength << endl;
     memcpy(argTypes, message + 72, argTypesLength);
 }
 
 int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLength, bool fromClient) {
-    cout << "----------marshaling-----------" << endl;
+//    cout << "----------marshaling-----------" << endl;
     std::vector< argT* > argTypeVector;
 
     generateArgTvector(argTypes, argTypeVector);
@@ -668,91 +668,91 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
         double * doubles;
         float * floats;
 
-        cout << "arg" << i << " ";
+//        cout << "arg" << i << " ";
         switch (argType->type) {
             case ARG_CHAR:
-                cout << "type=char : ";
+//                cout << "type=char : ";
                 chars = (char *)singleArgument;
                 if (argType->arraysize == 0) {
                     *msgPointer = chars[0];
                     msgPointer += 1;
-                    cout << *chars << " " << endl;
+//                    cout << *chars << " " << endl;
                 }
                 else {
                     for(int j = 0; j < argType->arraysize; j++) {
                         if (argType->input && argType->output) {
-                            cout << chars[j] << " ";
+//                            cout << chars[j] << " ";
                             *msgPointer = chars[j];
                         }
                         else if (argType->input) {
-                            cout << chars[j] << " ";
+//                            cout << chars[j] << " ";
                             *msgPointer = chars[j];
 
                         } else if (argType->output) {
                             if (fromClient) {
-                                cout << " ";
+//                                cout << " ";
                                 // do nothing
                             } else {
-                                cout << chars[j] << " ";
+//                                cout << chars[j] << " ";
                                 *msgPointer = chars[j];
                             }
                         }
                         msgPointer += 1;
 
-                    } cout << endl;
+                    } //cout << endl;
                 }
                 break;
             case ARG_SHORT: // 2 byte
-                cout << "type=short : ";
+//                cout << "type=short : ";
                 shorts = (short *)singleArgument;
                 if (argType->arraysize == 0) {
                     msgPointer[1] = (*shorts >> 8) & 0xFF;
                     msgPointer[0] = *shorts & 0xFF;
                     msgPointer += 2;
-                    cout << *shorts << " " << endl;
+//                    cout << *shorts << " " << endl;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
                         if (argType->input && argType->output) {
                             msgPointer[1] = (shorts[j] >> 8) & 0xFF;
                             msgPointer[0] = shorts[j] & 0xFF;
-                            cout << shorts[j] << " ";
+//                            cout << shorts[j] << " ";
                         }
                         else if (argType->input) {
                             msgPointer[1] = (shorts[j] >> 8) & 0xFF;
                             msgPointer[0] = shorts[j] & 0xFF;
-                            cout << shorts[j] << " ";
+//                            cout << shorts[j] << " ";
                         } else if (argType->output) {
                             if (fromClient) {
-                                cout << " ";
+//                                cout << " ";
                                 // do nothing
                             } else {
                                 msgPointer[1] = (shorts[j] >> 8) & 0xFF;
                                 msgPointer[0] = shorts[j] & 0xFF;
 
-                                cout << shorts[j] << " ";
+//                                cout << shorts[j] << " ";
                             }
                         }
                         msgPointer += 2;
-                    } cout << endl;
+                    } //cout << endl;
                 }
                 break;
             case ARG_INT: // 4byte
-                cout << "type=int : ";
+//                cout << "type=int : ";
                 ints = (int *)singleArgument;
                 if (argType->arraysize == 0) {
                     put4byteToCharArray(msgPointer, *ints);
                     msgPointer += 4;
-                    cout << *ints << " " << endl;
+//                    cout << *ints << " " << endl;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
                         put4byteToCharArray(msgPointer, ints[j]);
                         msgPointer += 4;
-                        cout << ints[j] << " ";
-                    } cout << endl;
+//                        cout << ints[j] << " ";
+                    } //cout << endl;
                 }
                 break;
             case ARG_LONG: // 4 byte
-                cout << "type=long : ";
+//                cout << "type=long : ";
                 longs = (long *)singleArgument;
                 if (argType->arraysize == 0) {
                     msgPointer[3] = (*longs >> 24) & 0xFF;
@@ -760,7 +760,7 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
                     msgPointer[1] = (*longs >> 8) & 0xFF;
                     msgPointer[0] = *longs & 0xFF;
                     msgPointer += 4;
-                    cout << *longs << " ";
+//                    cout << *longs << " ";
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
 
@@ -769,32 +769,32 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
                             msgPointer[2] = (longs[j] >> 16) & 0xFF;
                             msgPointer[1] = (longs[j] >> 8) & 0xFF;
                             msgPointer[0] = longs[j] & 0xFF;
-                            cout << longs[j] << " ";
+//                            cout << longs[j] << " ";
                         }
                         else if (argType->input) {
                             msgPointer[3] = (longs[j] >> 24) & 0xFF;
                             msgPointer[2] = (longs[j] >> 16) & 0xFF;
                             msgPointer[1] = (longs[j] >> 8) & 0xFF;
                             msgPointer[0] = longs[j] & 0xFF;
-                            cout << longs[j] << " ";
+//                            cout << longs[j] << " ";
                         } else if (argType->output) {
                             if (fromClient) {
-                                cout << " ";
+//                                cout << " ";
                                 // do nothing
                             } else {
                                 msgPointer[3] = (longs[j] >> 24) & 0xFF;
                                 msgPointer[2] = (longs[j] >> 16) & 0xFF;
                                 msgPointer[1] = (longs[j] >> 8) & 0xFF;
                                 msgPointer[0] = longs[j] & 0xFF;
-                                cout << longs[j] << " ";
+//                                cout << longs[j] << " ";
                             }
                         }
                         msgPointer += 4;
-                    } cout << endl;
+                    } //cout << endl;
                 }
                 break;
             case ARG_DOUBLE: // 8byte
-                cout << "type=double : ";
+//                cout << "type=double : ";
                 doubles = (double *)singleArgument;
                 if (argType->arraysize == 0) {
 
@@ -810,7 +810,7 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
                     msgPointer[0] = *(++ptr);
 
                     msgPointer += 8;
-                    cout << *doubles << " " << endl;
+//                    cout << *doubles << " " << endl;
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
 
@@ -826,7 +826,7 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
                             msgPointer[1] = *(++ptr);
                             msgPointer[0] = *(++ptr);
 
-                            cout << doubles[j] << " ";
+//                            cout << doubles[j] << " ";
                         }
                         else if (argType->input) {
                             char *ptr = (char*)(&doubles[j]);
@@ -840,10 +840,10 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
                             msgPointer[1] = *(++ptr);
                             msgPointer[0] = *(++ptr);
 
-                            cout << doubles[j] << " ";
+//                            cout << doubles[j] << " ";
                         } else if (argType->output) {
                             if (fromClient) {
-                                cout << " ";
+//                                cout << " ";
                                 // do nothing
                             } else {
                                 char *ptr = (char*)(&doubles[j]);
@@ -858,15 +858,15 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
                                 msgPointer[0] = *(++ptr);
 
 
-                                cout << doubles[j] << " ";
+//                                cout << doubles[j] << " ";
                             }
                         }
                         msgPointer += 8;
-                    } cout << endl;
+                    } //cout << endl;
                 }
                 break;
             case ARG_FLOAT: // 4 byte
-                cout << "type=float : ";
+//                cout << "type=float : ";
                 floats = (float *)singleArgument;
                 if (argType->arraysize == 0) {
 
@@ -878,7 +878,7 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
                     msgPointer[0] = *(++ptr);
 
                     msgPointer += 4;
-                    cout << *floats << " " << endl;
+//                    cout << *floats << " " << endl;
 
                 } else {
                     for (int j = 0; j < argType->arraysize; j++) {
@@ -890,7 +890,7 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
                             msgPointer[1] = *(++ptr);
                             msgPointer[0] = *(++ptr);
 
-                            cout << floats[j] << " ";
+//                            cout << floats[j] << " ";
                         }
                         else if (argType->input) {
                             msgPointer[3] = *ptr;
@@ -898,10 +898,10 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
                             msgPointer[1] = *(++ptr);
                             msgPointer[0] = *(++ptr);
 
-                            cout << floats[j] << " ";
+//                            cout << floats[j] << " ";
                         } else if (argType->output) {
                             if (fromClient) {
-                                cout << " ";
+//                                cout << " ";
                                 // do nothing
                             } else {
                                 msgPointer[3] = *ptr;
@@ -909,17 +909,17 @@ int marshallData(char * msgPointer, int * argTypes, void ** args, int argTypesLe
                                 msgPointer[1] = *(++ptr);
                                 msgPointer[0] = *(++ptr);
 
-                                cout << floats[j] << " ";
+//                                cout << floats[j] << " ";
                             }
                         }
                         msgPointer += 4;
-                    } cout << endl;
+                    } //cout << endl;
                 }
                 break;
         } // switch
 
     } // for
-    cout << "--------marshaling end---------" << endl;
+//    cout << "--------marshaling end---------" << endl;
 }
 
 int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen, bool allocateMemory) {
@@ -928,9 +928,9 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
 
     generateArgTvector(argTypes, argTypeVector);
 
-    cout << "========START UNMARSHALLING=========" << endl;
+//    cout << "========START UNMARSHALLING=========" << endl;
 
-    cout << "argslen=" << argslen << endl;
+//    cout << "argslen=" << argslen << endl;
 
     for (int i = 0; i < argslen; i++) {
 
@@ -943,17 +943,17 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
         double * doubles;
         float * floats;
 
-        cout << "arg" << i << " ";
+//        cout << "arg" << i << " ";
         if (allocateMemory) {
             switch (argType->type) {
                 case ARG_CHAR:
-                    cout << "type=char : ";
+//                    cout << "type=char : ";
                     if (argType->arraysize == 0) {
                         chars = new char();
                         *chars = msgPointer[0];
                         msgPointer += 1;
 
-                        cout << *chars << " " << endl;
+//                        cout << *chars << " " << endl;
 
                         args[i] = chars;
                     } else {
@@ -964,15 +964,15 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             *chars = msgPointer[0];
                             msgPointer += 1;
 
-                            cout << chars[j] << " ";
+//                            cout << chars[j] << " ";
 
                             chars += 1;
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
 
                 case ARG_SHORT: // 2 byte
-                    cout << "type=short : ";
+//                    cout << "type=short : ";
                     if (argType->arraysize == 0) {
                         shorts = new short();
                         char *ptr = (char*)(shorts);
@@ -982,7 +982,7 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                         msgPointer += 1;
 
                         *shorts = *((short*)ptr);
-                        cout << *shorts << " " << endl;
+//                        cout << *shorts << " " << endl;
 
                         args[i] = shorts;
                     } else {
@@ -996,26 +996,26 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             msgPointer += 1;
 
                             *shorts = *((short*)ptr);
-                            cout << *shorts << " ";
+//                            cout << *shorts << " ";
 
                             if (j == 0) {
                                 args[i] = shorts;
                             }
                             shorts += 1;
 
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
 
                 case ARG_INT: // 4byte
-                    cout << "type=int : ";
+//                    cout << "type=int : ";
                     if (argType->arraysize == 0) {
                         ints = new int();
 
                         get4byteFromCharArray(ints, msgPointer);
                         msgPointer += 4;
 
-                        cout << *ints << ", address = " << ints << endl;
+//                        cout << *ints << ", address = " << ints << endl;
                         args[i] = (void*)ints;
 
                     } else {
@@ -1024,14 +1024,14 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             get4byteFromCharArray(ints, msgPointer);
                             msgPointer += 4;
 
-                            cout << *ints << " ";
+//                            cout << *ints << " ";
                             if (j == 0) {
                                 args[i] = ints;
                             }
 
                             ints += 1;
 
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
                 case ARG_LONG: // 4 byte
@@ -1046,7 +1046,7 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                         msgPointer += 1;
 
                         *longs = *((long*)ptr);
-                        cout << *longs << " " << endl;
+//                        cout << *longs << " " << endl;
 
                         args[i] = longs;
                     } else {
@@ -1062,18 +1062,18 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             msgPointer += 1;
 
                             *longs = *((long*)ptr);
-                            cout << *longs << " ";
+//                            cout << *longs << " ";
 
                             if (j == 0) {
                                 args[i] = longs;
                             }
 
                             longs += 1;
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
                 case ARG_DOUBLE: // 8byte
-                    cout << "type=double : ";
+//                    cout << "type=double : ";
                     if (argType->arraysize == 0) {
                         doubles = new double();
 
@@ -1090,7 +1090,7 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                         msgPointer += 1;
 
                         *doubles = *((double*)ptr);
-                        cout << *doubles << " " << endl;
+//                        cout << *doubles << " " << endl;
 
                         args[i] = doubles;
 
@@ -1111,18 +1111,18 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             msgPointer += 1;
 
                             *doubles = *((double*)ptr);
-                            cout << *doubles << " ";
+//                            cout << *doubles << " ";
 
                             if (j == 0) {
                                 args[i] = doubles;
                             }
 
                             doubles += 1;
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
                 case ARG_FLOAT: // 4 byte
-                    cout << "type=float : ";
+//                    cout << "type=float : ";
                     if (argType->arraysize == 0) {
                         floats = new float();
 
@@ -1135,7 +1135,7 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                         msgPointer += 1;
 
                         *floats = *((float*)ptr);
-                        cout << *floats << " " << endl;
+//                        cout << *floats << " " << endl;
 
                         args[i] = floats;
 
@@ -1152,7 +1152,7 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             msgPointer += 1;
 
                             *floats = *((float*)ptr);
-                            cout << *floats << " ";
+//                            cout << *floats << " ";
 
                             if (j == 0) {
                                 args[i] = floats;
@@ -1160,14 +1160,14 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
 
                             floats += 1;
 
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
             }
         } else {
             switch (argType->type) {
                 case ARG_CHAR:
-                    cout << "type=char : ";
+//                    cout << "type=char : ";
                     if (argType->arraysize == 0) {
                         *((char *)args[i]) = msgPointer[0];
                         cout << *msgPointer << " " << endl;
@@ -1177,16 +1177,16 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                     } else {
                         for (int j = 0; j < argType->arraysize; j++) {
                             ((char *)args[i])[j] = msgPointer[0];
-                            cout << *msgPointer << " ";
+//                            cout << *msgPointer << " ";
 
                             msgPointer += 1;
 
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
 
                 case ARG_SHORT: // 2 byte
-                    cout << "type=short : ";
+//                    cout << "type=short : ";
                     if (argType->arraysize == 0) {
                         shorts = (short *)args[i];
 
@@ -1196,7 +1196,7 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                         msgPointer += 1;
 
                         // *shorts = *((short*)ptr);
-                        cout << *shorts << " " << endl;
+//                        cout << *shorts << " " << endl;
 
                     } else {
 
@@ -1209,22 +1209,22 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             ptr[1] = *(++msgPointer);
                             msgPointer += 1;
 
-                            cout << *shorts << " ";
+//                            cout << *shorts << " ";
 
                             shorts += 1;
 
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
 
                 case ARG_INT: // 4byte
-                    cout << "type=int : ";
+//                    cout << "type=int : ";
                     if (argType->arraysize == 0) {
                         ints = (int *)args[i];
                         get4byteFromCharArray(ints, msgPointer);
                         msgPointer += 4;
 
-                        cout << *ints << " " << endl;
+//                        cout << *ints << " " << endl;
 
                     } else {
                         ints = (int *) args[i];
@@ -1232,14 +1232,14 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             get4byteFromCharArray(ints, msgPointer);
                             msgPointer += 4;
 
-                            cout << *ints << " ";
+//                            cout << *ints << " ";
 
                             ints += 1;
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
                 case ARG_LONG: // 4 byte
-                    cout << "type=long : ";
+//                    cout << "type=long : ";
                     if (argType->arraysize == 0) {
                         longs = (long *)args[i];
 
@@ -1251,7 +1251,7 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                         ptr[3] = *(++msgPointer);
                         msgPointer += 1;
 
-                        cout << *longs << " " << endl;
+//                        cout << *longs << " " << endl;
 
                     } else {
                         longs = (long *) args[i];
@@ -1264,14 +1264,14 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             ptr[3] = *(++msgPointer);
                             msgPointer += 1;
 
-                            cout << *longs << " ";
+//                            cout << *longs << " ";
 
                             longs += 1;
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
                 case ARG_DOUBLE: // 8byte
-                    cout << "type=double : ";
+//                    cout << "type=double : ";
                     if (argType->arraysize == 0) {
                         doubles = (double *)args[i];
 
@@ -1287,7 +1287,7 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                         ptr[0] = *(++msgPointer);
                         msgPointer += 1;
 
-                        cout << *doubles << " " << endl;
+//                        cout << *doubles << " " << endl;
 
                     } else {
                         doubles = (double *) args[i];
@@ -1305,14 +1305,14 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             ptr[0] = *(++msgPointer);
                             msgPointer += 1;
 
-                            cout << *doubles << " ";
+//                            cout << *doubles << " ";
 
                             doubles += 1;
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
                 case ARG_FLOAT: // 4 byte
-                    cout << "type=float : ";
+//                    cout << "type=float : ";
                     if (argType->arraysize == 0) {
                         floats = (float *) args[i];
 
@@ -1323,7 +1323,7 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                         ptr[0] = *(++msgPointer);
                         msgPointer += 1;
 
-                        cout << *floats << " " << endl;
+//                        cout << *floats << " " << endl;
 
                     } else {
                         floats = (float *) args[i];
@@ -1336,16 +1336,16 @@ int unmarshallData(char * msgPointer, int * argTypes, void * args[], int argslen
                             ptr[0] = *(++msgPointer);
                             msgPointer += 1;
 
-                            cout << *floats << " ";
+//                            cout << *floats << " ";
 
                             floats += 1;
 
-                        } cout << endl;
+                        } //cout << endl;
                     }
                     break;
             } // switch
         } // else
     } // for
-    cout << "=========END UNMARSHALLING==========" << endl;
+//    cout << "=========END UNMARSHALLING==========" << endl;
     return 0;
 } // end of function
